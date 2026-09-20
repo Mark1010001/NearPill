@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NearPill Admin Portal | Clinical Concierge Operations</title>
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Clinical Concierge Design System Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css?v=100">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <i class="fa-solid fa-pills"></i>
+        </div>
+        <div>
+          <div class="brand-title">Near<span>Pill</span></div>
+          <div style="font-size: 10px; color: var(--color-text-muted); font-weight: 600;">CLINICAL CONCIERGE</div>
+        </div>
+      </div>
+
+      <div class="role-switcher-box">
+        <div class="role-label">AUTHENTICATED WORKSPACE</div>
+        <div id="workspaceBadgeText" style="font-size: 13px; font-weight: 700; color: var(--color-primary-dark);">
+          Platform Operations
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- Navigation rendered dynamically by js/app.js -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-avatar" id="userAvatarText">NP</div>
+        <div class="user-info">
+          <div class="user-name" id="userNameText">Platform Admin</div>
+          <div class="user-role" id="userRoleText">Central Operations</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="page-title" id="currentPageTitle">Executive Dashboard</h1>
+        </div>
+
+        <div class="topbar-right">
+          <div class="status-pill">
+            <div class="pulse-dot"></div>
+            <span>Network Live & Online</span>
+          </div>
+
+          <button class="topbar-btn" title="System Alerts">
+            <i class="fa-solid fa-bell"></i>
+            <div class="indicator"></div>
+          </button>
+
+          <button class="logout-btn" onclick="logoutSession()">
+            <i class="fa-solid fa-right-to-bracket"></i> Logout
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic Content View Area -->
+      <main class="content-body" id="mainViewContainer">
+        <!-- Views rendered by app.js -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Glassmorphic Login Overlay System -->
+  <div class="login-screen-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-card-header">
+        <div class="login-brand-logo">
+          <i class="fa-solid fa-pills"></i>
+        </div>
+        <div class="login-title">NearPill Portal</div>
+        <div class="login-subtitle">Clinical Concierge Operations & Pharmacy Admin</div>
+        <div class="slug-indicator" id="slugIndicatorText" style="display: none;">
+          <!-- Direct Branch URL Scoped Badge -->
+        </div>
+      </div>
+
+      <div class="login-card-body">
+        <div class="login-mode-tabs">
+          <button class="login-tab-btn active" id="tabAdminLogin" onclick="switchLoginMode('admin')">
+            <i class="fa-solid fa-user-shield"></i> Platform Owner
+          </button>
+          <button class="login-tab-btn" id="tabPharmacyLogin" onclick="switchLoginMode('pharmacy')">
+            <i class="fa-solid fa-store"></i> Partner Drugstore Staff
+          </button>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group" id="pharmacyBranchSelectGroup" style="display: none;">
+            <label class="form-label">Select Pharmacy Branch</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-store"></i>
+              <select id="loginBranchSelect" onchange="onLoginBranchChange()">
+                <option value="PH-001" data-slug="medplus-drugstore">MedPlus Drugstore</option>
+                <option value="PH-002" data-slug="generika-drugstore">Generika Drugstore</option>
+                <option value="PH-003" data-slug="wellness-pharmacy">Wellness Pharmacy</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Admin Email Address</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-envelope"></i>
+              <input type="email" id="loginEmail" required value="admin@nearpill.com" placeholder="admin@nearpill.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="loginPassword" required value="admin123" placeholder="••••••••">
+              <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 10px; font-size: 14px;">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to NearPill Portal
+          </button>
+        </form>
+
+        <div class="demo-chips-container">
+          <div class="demo-chips-title">Instant Quick Demo Credentials (1-Click)</div>
+          <div class="demo-chips-wrapper">
+            <button type="button" class="demo-chip" onclick="quickDemoLogin('admin')">
+              <i class="fa-solid fa-key"></i> Platform Owner
+            </button>
+            <button type="button" class="demo-chip" onclick="quickDemoLogin('medplus-drugstore')">
+              <i class="fa-solid fa-store"></i> MedPlus Drugstore
+            </button>
+            <button type="button" class="demo-chip" onclick="quickDemoLogin('generika-drugstore')">
+              <i class="fa-solid fa-store"></i> Generika Drugstore
+            </button>
+            <button type="button" class="demo-chip" onclick="quickDemoLogin('wellness-pharmacy')">
+              <i class="fa-solid fa-store"></i> Wellness Pharmacy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decoupled Multi-Tenant Shared Database Core & Event Engine -->
+  <script src="js/data.js?v=200"></script>
+  <script src="js/db.js?v=200"></script>
+  <script src="js/tenant-engine.js?v=200"></script>
+  <script src="js/charts.js?v=200"></script>
+  <script src="js/api.js?v=200"></script>
+  <script src="js/app.js?v=200"></script>
+</body>
+</html>
