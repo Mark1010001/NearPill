@@ -3,8 +3,8 @@
 
 :root {
   /* Brand Color Palette - Clinical Concierge */
-  --color-primary: #10b981;       /* Clinical Mint */
-  --color-primary-hover: #059669;
+  --color-primary: #047857;
+  --color-primary-hover: #065f46;
   --color-primary-light: #d1fae5;
   --color-primary-dark: #006c49;  /* Deep Clinical Green */
   
@@ -15,7 +15,7 @@
   
   --color-text-main: #171d1b;     /* Slate Grey */
   --color-text-muted: #52605b;
-  --color-text-light: #7c8e87;
+  --color-text-light: #52605b;
   
   --color-border: #e2ece7;
   --color-border-hover: #c3d9cf;
@@ -154,6 +154,10 @@ body {
 }
 
 .nav-item {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -710,6 +714,12 @@ body {
 
 /* Modals */
 .modal-overlay {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  color: inherit;
   position: fixed;
   top: 0;
   left: 0;
@@ -717,7 +727,7 @@ body {
   bottom: 0;
   background-color: rgba(23, 29, 27, 0.6);
   backdrop-filter: blur(4px);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 100;
@@ -727,8 +737,48 @@ body {
 }
 
 .modal-overlay.active {
+  display: flex;
   opacity: 1;
   visibility: visible;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary-dark) !important;
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-200%);
+  padding: 12px;
+  background: white;
+  color: var(--color-primary-dark);
+  z-index: 300;
+}
+
+.skip-link:focus { transform: none; }
+
+button.password-toggle {
+  border: 0;
+  background: transparent;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.input-with-icon button.password-toggle i {
+  position: static;
+  transform: none;
+}
+
+#loginPassword { padding-right: 64px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 .modal-card {

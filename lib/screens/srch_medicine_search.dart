@@ -182,7 +182,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
                       selected: selected,
                       onSelected: (_) =>
                           setState(() => _selectedFilter = index),
-                      selectedColor: const Color(0xFF4CAF50),
+                      selectedColor: const Color(0xFF2E7D32),
                       labelStyle: TextStyle(
                         color: selected ? Colors.white : Colors.black87,
                       ),
@@ -251,7 +251,7 @@ class _MedicineSearchScreenState extends State<MedicineSearchScreen> {
                                             child: Icon(
                                               Icons.medical_services,
                                               size: 36,
-                                              color: Color(0xFF4CAF50),
+                                              color: Color(0xFF2E7D32),
                                             ),
                                           ),
                                         ),

@@ -2,6 +2,14 @@
 
 A new Flutter project.
 
+## Service information and readiness
+
+- [Data and order inventory](docs/data-inventory.md)
+- [Readiness audit and outstanding launch requirements](docs/readiness-audit.md)
+- [Shared prelaunch policy text](web/policies.json), displayed by the web policy page and the Flutter app.
+
+Run `flutter test --no-pub` and `node --test test/web_service_information.test.cjs` for the service-information regression checks.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

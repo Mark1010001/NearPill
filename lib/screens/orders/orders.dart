@@ -51,8 +51,8 @@ class _OrdersScreenState extends State<OrdersScreen>
         title: const Text('Orders'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFF4CAF50),
-          labelColor: const Color(0xFF4CAF50),
+          indicatorColor: const Color(0xFF2E7D32),
+          labelColor: const Color(0xFF2E7D32),
           unselectedLabelColor: Colors.grey,
           tabs: [
             Tab(text: 'Cart (${cart.items.length})'),
@@ -135,7 +135,7 @@ class _StoreGroupHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.storefront, size: 18, color: Color(0xFF4CAF50)),
+        const Icon(Icons.storefront, size: 18, color: Color(0xFF2E7D32)),
         const SizedBox(width: 8),
         Text(
           storeName,
@@ -212,7 +212,7 @@ class _CartItemCardState extends State<_CartItemCard> {
                 ),
                 child: const Icon(
                   Icons.medical_services,
-                  color: Color(0xFF4CAF50),
+                  color: Color(0xFF2E7D32),
                   size: 28,
                 ),
               ),
@@ -344,13 +344,13 @@ class _QuantityControl extends StatelessWidget {
           border: Border.all(
             color: onTap == null
                 ? Colors.grey.shade300
-                : const Color(0xFF4CAF50),
+                : const Color(0xFF2E7D32),
           ),
         ),
         child: Icon(
           icon,
           size: 18,
-          color: onTap == null ? Colors.grey : const Color(0xFF4CAF50),
+          color: onTap == null ? Colors.grey : const Color(0xFF2E7D32),
         ),
       ),
     );
@@ -413,7 +413,7 @@ class _CheckoutSummaryBar extends StatelessWidget {
                     ).then((_) => onCheckoutComplete());
                   },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
+              backgroundColor: const Color(0xFF2E7D32),
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -504,7 +504,7 @@ class _MyOrdersTabState extends State<_MyOrdersTab> {
 
     if (orderService.error != null && orderService.orders.isEmpty) {
       return RefreshIndicator(
-        color: const Color(0xFF4CAF50),
+        color: const Color(0xFF2E7D32),
         onRefresh: () => context.read<OrderService>().fetchOrders(),
         child: ListView(
           children: const [
@@ -522,7 +522,7 @@ class _MyOrdersTabState extends State<_MyOrdersTab> {
     final orders = orderService.orders;
     if (orders.isEmpty) {
       return RefreshIndicator(
-        color: const Color(0xFF4CAF50),
+        color: const Color(0xFF2E7D32),
         onRefresh: () => context.read<OrderService>().fetchOrders(),
         child: ListView(
           children: const [
@@ -542,7 +542,7 @@ class _MyOrdersTabState extends State<_MyOrdersTab> {
     final pastOrders = filteredOrders.where((o) => o.isPast).toList();
 
     return RefreshIndicator(
-      color: const Color(0xFF4CAF50),
+      color: const Color(0xFF2E7D32),
       onRefresh: () => context.read<OrderService>().fetchOrders(),
       child: Column(
         children: [
@@ -582,7 +582,7 @@ class _MyOrdersTabState extends State<_MyOrdersTab> {
                   label: Text('${filter.label} ($count)'),
                   selected: selected,
                   onSelected: (_) => setState(() => _filter = filter),
-                  selectedColor: const Color(0xFF4CAF50),
+                  selectedColor: const Color(0xFF2E7D32),
                   backgroundColor: Colors.white,
                   labelStyle: TextStyle(
                     fontSize: 12.5,
@@ -593,7 +593,7 @@ class _MyOrdersTabState extends State<_MyOrdersTab> {
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
                       color: selected
-                          ? const Color(0xFF4CAF50)
+                          ? const Color(0xFF2E7D32)
                           : Colors.grey.shade300,
                     ),
                   ),
@@ -622,7 +622,7 @@ class _MyOrdersTabState extends State<_MyOrdersTab> {
                           title: 'Active Orders',
                           count: activeOrders.length,
                           icon: Icons.timelapse,
-                          color: const Color(0xFF4CAF50),
+                          color: const Color(0xFF2E7D32),
                         ),
                         const SizedBox(height: 6),
                         for (final order in activeOrders) ...[
@@ -842,14 +842,14 @@ class _ItemThumbnailStack extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF4CAF50),
+                            color: Color(0xFF2E7D32),
                           ),
                         ),
                       )
                     : const Icon(
                         Icons.medical_services,
                         size: 16,
-                        color: Color(0xFF4CAF50),
+                        color: Color(0xFF2E7D32),
                       ),
               ),
             ),
@@ -905,7 +905,7 @@ class _PrimaryPill extends StatelessWidget {
     return FilledButton(
       onPressed: onTap,
       style: FilledButton.styleFrom(
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: const Color(0xFF2E7D32),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -968,7 +968,7 @@ class _StatusChip extends StatelessWidget {
     final (label, color) = switch (stage) {
       OrderStage.placed => ('Order Placed', Colors.blueGrey),
       OrderStage.preparing => ('Preparing', Colors.orange),
-      OrderStage.ready => ('Ready for Pickup', const Color(0xFF4CAF50)),
+      OrderStage.ready => ('Ready for Pickup', const Color(0xFF2E7D32)),
       OrderStage.completed => ('Completed', Colors.blue),
       OrderStage.cancelled => ('Cancelled', Colors.red),
     };

@@ -15,6 +15,8 @@
     "mysql2": "^3.6.0"
   },
   "devDependencies": {
+    "db-migrate": "^0.11.14",
+    "db-migrate-mysql": "^3.0.0",
     "nodemon": "^3.1.14"
   }
 }
