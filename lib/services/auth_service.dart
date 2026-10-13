@@ -190,6 +190,11 @@ class AuthService {
       return AuthException('Invalid email or password.');
     }
 
+    if (error.response?.statusCode == 400 ||
+        error.response?.statusCode == 413) {
+      return AuthException('Please check your details and try again.');
+    }
+
     return AuthException('Something went wrong. Please try again.');
   }
 }

@@ -67,7 +67,32 @@ npm install
 npm run dev
 ```
 
-### Test the API
+### Authentication input validation
+
+Login, registration, send-code and verify-code requests are validated by
+`auth-validation.js` before the database or email handlers run. Auth JSON bodies
+are limited to 4 KiB. Invalid bodies return a generic JSON error with HTTP 400
+(413 for oversized bodies). Validation logs contain only the action and reason.
+
+- Email: trimmed, lowercased ASCII dot-atom address, maximum 254 characters,
+  local part up to 64 and domain labels up to 63. Quoted and internationalized
+  mailbox addresses are currently unsupported; format checks do not prove ownership.
+- Full name at signup: 1–100 characters after trimming; Unicode letters, marks,
+  numbers, spaces, apostrophes, periods, commas, parentheses, hyphens and underscores.
+  At least one letter is required. Markup and embedded control characters are rejected.
+- Signup password: the current client minimum of 6 characters, maximum 128.
+  Login allows 1–255 characters to preserve access for legacy accounts. Lengths
+  use JavaScript/Flutter UTF-16 units. Passwords are never trimmed or rewritten.
+- Verification code: exactly six ASCII digits, sent as a string.
+- Missing, incorrectly typed and unexpected fields are rejected. NearPill has
+  no username field; signup sends `fullName`, `email` and `password`.
+
+Run `node --test test/auth-validation.test.mjs` from `backend` to test the
+middleware over HTTP with no database or email calls. Plain-text password
+storage, verified-email enforcement and session hardening remain separate launch
+requirements in [the readiness audit](../docs/readiness-audit.md).
+
+### Medicine API smoke check
 
 ```bash
 Invoke-RestMethod -Uri http://localhost:3000/api/medicines -UseBasicParsing

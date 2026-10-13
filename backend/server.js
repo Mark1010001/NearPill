@@ -4,6 +4,7 @@ import { createHash, randomInt } from 'crypto';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import { createAuthSessionStore } from './auth.js';
+import { validateAuthInput, handleAuthJsonError } from './auth-validation.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use(
   })
 );
 
+app.use('/api/auth', express.json({ limit: '4kb' }), handleAuthJsonError);
 app.use(express.json());
 
 const {
@@ -81,12 +83,6 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 /* =========================================================
    HELPER FUNCTIONS
 ========================================================= */
-
-function normaliseEmail(email) {
-  return String(email || '')
-    .trim()
-    .toLowerCase();
-}
 
 function hashOtp(email, code) {
   return createHash('sha256')
@@ -308,33 +304,8 @@ app.get('/api/health', async (req, res) => {
    AUTH — REGISTER
 ========================================================= */
 
-app.post('/api/auth/register', async (req, res) => {
-  const {
-    fullName,
-    email,
-    password,
-  } = req.body;
-
-  const cleanName = String(
-    fullName || ''
-  ).trim();
-
-  const cleanEmail = normaliseEmail(email);
-
-  const cleanPassword = String(
-    password || ''
-  );
-
-  if (
-    !cleanName ||
-    !cleanEmail ||
-    !cleanPassword
-  ) {
-    return res.status(400).json({
-      error:
-        'Full name, email, and password are required.',
-    });
-  }
+app.post('/api/auth/register', validateAuthInput('register'), async (req, res) => {
+  const { fullName: cleanName, email: cleanEmail, password: cleanPassword } = req.body;
 
   try {
     const [existingUsers] = await pool.query(
@@ -397,7 +368,7 @@ app.post('/api/auth/register', async (req, res) => {
   } catch (error) {
     console.error(
       'Registration failed:',
-      error
+      { code: error.code }
     );
 
     res.status(500).json({
@@ -410,16 +381,8 @@ app.post('/api/auth/register', async (req, res) => {
    AUTH — SEND OTP
 ========================================================= */
 
-app.post('/api/auth/send-otp', async (req, res) => {
-  const email = normaliseEmail(
-    req.body?.email
-  );
-
-  if (!email) {
-    return res.status(400).json({
-      error: 'Email is required.',
-    });
-  }
+app.post('/api/auth/send-otp', validateAuthInput('send-otp'), async (req, res) => {
+  const { email } = req.body;
 
   try {
     const [users] = await pool.query(
@@ -486,21 +449,9 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
 app.post(
   '/api/auth/verify-otp',
+  validateAuthInput('verify-otp'),
   async (req, res) => {
-    const email = normaliseEmail(
-      req.body?.email
-    );
-
-    const code = String(
-      req.body?.code || ''
-    ).trim();
-
-    if (!email || !code) {
-      return res.status(400).json({
-        error:
-          'Email and verification code are required.',
-      });
-    }
+    const { email, code } = req.body;
 
     const pending =
       pendingOtps.get(email);
@@ -555,21 +506,8 @@ app.post(
    AUTH — LOGIN
 ========================================================= */
 
-app.post('/api/auth/login', async (req, res) => {
-  const email = normaliseEmail(
-    req.body?.email
-  );
-
-  const password = String(
-    req.body?.password || ''
-  );
-
-  if (!email || !password) {
-    return res.status(400).json({
-      error:
-        'Email and password are required.',
-    });
-  }
+app.post('/api/auth/login', validateAuthInput('login'), async (req, res) => {
+  const { email, password } = req.body;
 
   try {
     const [rows] = await pool.query(
