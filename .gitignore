@@ -1,4 +1,24 @@
-backend/.env
+# Local Environment Secrets
+.env
+.env.local
+
+# Node.js Dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Flutter / Dart Build Outputs
 .dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-get-history
 build/
-.flutter-plugins*
+*.log
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Local IDE Files
+.idea/
+*.iml
