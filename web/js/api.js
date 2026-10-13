@@ -35,10 +35,10 @@ const NearPillAPI = {
           name: p.name,
           address: p.address,
           email: p.email,
-          licenseNo: p.licenseNo || "FDA-PH-2026-ACTIVE",
-          manager: p.manager || "Branch Staff, RPh",
+          licenseNo: p.licenseNo || "Not provided",
+          manager: p.manager || "Not provided",
           status: (p.status || "Active").toLowerCase() === "active" ? "active" : "pending_review",
-          rating: p.rating || "4.8",
+          rating: p.rating ?? null,
           totalOrders: p.totalOrders || 0,
           totalSales: p.totalSales || 0
         }));
@@ -93,7 +93,7 @@ const NearPillAPI = {
           dosageForm: m.dosage || "Tablet / Liquid",
           requiresRx: Boolean(m.requiresRx),
           basePrice: parseFloat(m.price) || 0,
-          manufacturer: m.manufacturer || "FDA Approved Supplier"
+          manufacturer: m.manufacturer || "Not provided"
         }));
       }
     } catch (e) {

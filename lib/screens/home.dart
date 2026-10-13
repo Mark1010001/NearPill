@@ -28,26 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<MedicineModel> _medicines = [];
   final List<MedicineModel> _filteredMedicines = [];
 
-  List<Map<String, dynamic>> _drugstores = [
-    {
-      'name': 'MedPlus Drugstore',
-      'rating': 4.8,
-      'distance': '0.5 km',
-      'color': const Color(0xFFE8F5E9),
-    },
-    {
-      'name': 'Generika Drugstore',
-      'rating': 4.5,
-      'distance': '1.2 km',
-      'color': const Color(0xFFF1F8E9),
-    },
-    {
-      'name': 'Wellness Pharmacy',
-      'rating': 4.7,
-      'distance': '2.0 km',
-      'color': const Color(0xFFE3F2FD),
-    },
-  ];
+  List<Map<String, dynamic>> _drugstores = [];
 
   final List<Map<String, String>> _categories = const [
     {
@@ -167,12 +148,10 @@ class _HomeScreenState extends State<HomeScreen> {
             for (int i = 0; i < data.length; i++) {
               final item = data[i];
               fetchedStores.add({
-                'id': item['id']?.toString() ?? '1',
-                'name': item['name'] ?? 'Partner Drugstore',
-                'rating': (item['rating'] != null)
-                    ? double.tryParse(item['rating'].toString()) ?? 4.8
-                    : 4.8,
-                'distance': item['distance'] ?? '0.8 km',
+                'id': item['store_id'].toString(),
+                'name': item['store_name'] ?? 'Pharmacy',
+                'openNow': item['openNow'],
+                'hoursDisplay': item['operating_hours'],
                 'color': colors[i % colors.length],
               });
             }
@@ -214,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: const [
-                    Icon(Icons.place, color: Color(0xFF4CAF50), size: 28),
+                    Icon(Icons.place, color: Color(0xFF2E7D32), size: 28),
                     SizedBox(width: 16),
                     Expanded(
                       child: Text(
@@ -290,20 +269,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.star,
-                                        color: Colors.amber,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${item['rating']}',
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
                                   const SizedBox(height: 12),
                                   Builder(
                                     builder: (_) {
@@ -313,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           item['isOpen'] == true);
                                       final String hoursStr =
                                           item['hoursDisplay'] ??
-                                          '8:00 AM - 4:00 PM';
+                                          'Hours not provided';
                                       return Wrap(
                                         spacing: 6,
                                         runSpacing: 6,

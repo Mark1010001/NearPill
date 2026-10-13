@@ -11,7 +11,9 @@ import '../config/api_config.dart';
 import '../services/cart_service.dart';
 
 class StoreDetailScreen extends StatefulWidget {
-  const StoreDetailScreen({super.key});
+  const StoreDetailScreen({super.key, this.client});
+
+  final http.Client? client;
 
   static const routeName = '/store-detail';
 
@@ -30,6 +32,9 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
   Timer? _addFeedbackDebounce;
   String? _addFeedbackItemId;
   int _addFeedbackTotalQty = 0;
+
+  late final http.Client _client = widget.client ?? http.Client();
+  String? _loadError;
 
   // UI state
   bool _isLoading = false;
@@ -51,370 +56,6 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
 
   String _lastStoreId = '';
 
-  // Local catalog mirrors nearpill_database.csv exactly (drug_name,
-  // dosage_form, price, stock_count, prescription_required). The
-  // 'category' field does not exist in the CSV -- it's inferred here
-  // from generic_name purely so the existing category chips have
-  // something to filter on. Swap this for a real category column
-  // once one exists in the database.
-  List<Map<String, dynamic>> _getStoreInventoryByID(String storeId) {
-    final catalog = <String, List<Map<String, dynamic>>>{
-      '1': [
-        {
-          'id': '1',
-          'name': 'Biogesic 500mg',
-          'dosage': 'Tablet',
-          'price': '7.50',
-          'stockCount': 350,
-          'rxRequired': false,
-          'category': 'Pain Relief',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '2',
-          'name': 'Neozep Forte',
-          'dosage': 'Tablet',
-          'price': '8.00',
-          'stockCount': 240,
-          'rxRequired': false,
-          'category': 'Cough & Cold',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '3',
-          'name': 'Alaxan FR',
-          'dosage': 'Capsule',
-          'price': '12.00',
-          'stockCount': 180,
-          'rxRequired': false,
-          'category': 'Pain Relief',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '4',
-          'name': 'Kremil-S',
-          'dosage': 'Tablet',
-          'price': '9.25',
-          'stockCount': 400,
-          'rxRequired': false,
-          'category': 'Digestive',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '5',
-          'name': 'Loperamide 2mg',
-          'dosage': 'Capsule',
-          'price': '6.00',
-          'stockCount': 500,
-          'rxRequired': false,
-          'category': 'Digestive',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '6',
-          'name': 'Cetirizine 10mg',
-          'dosage': 'Tablet',
-          'price': '15.00',
-          'stockCount': 150,
-          'rxRequired': false,
-          'category': 'Antihistamine',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '7',
-          'name': 'Mefenamic Acid 500mg',
-          'dosage': 'Tablet',
-          'price': '11.50',
-          'stockCount': 300,
-          'rxRequired': false,
-          'category': 'Pain Relief',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '8',
-          'name': 'Vitamin C 500mg',
-          'dosage': 'Tablet',
-          'price': '5.00',
-          'stockCount': 600,
-          'rxRequired': false,
-          'category': 'Vitamins',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '9',
-          'name': 'Clonidine 500mg',
-          'dosage': 'Tablet',
-          'price': '25.00',
-          'stockCount': 90,
-          'rxRequired': false,
-          'category': 'Maintenance',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '10',
-          'name': 'Betadine 60ml',
-          'dosage': 'Liquid Solution',
-          'price': '145.00',
-          'stockCount': 60,
-          'rxRequired': false,
-          'category': 'First Aid',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '11',
-          'name': 'Amoxicillin 500mg',
-          'dosage': 'Capsule',
-          'price': '18.00',
-          'stockCount': 200,
-          'rxRequired': true,
-          'category': 'Antibiotics',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '12',
-          'name': 'Azithromycin 500mg',
-          'dosage': 'Tablet',
-          'price': '95.00',
-          'stockCount': 85,
-          'rxRequired': true,
-          'category': 'Antibiotics',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '13',
-          'name': 'Metformin 500mg',
-          'dosage': 'Tablet',
-          'price': '14.00',
-          'stockCount': 450,
-          'rxRequired': true,
-          'category': 'Maintenance',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '14',
-          'name': 'Amlodipine 5mg',
-          'dosage': 'Tablet',
-          'price': '10.50',
-          'stockCount': 500,
-          'rxRequired': true,
-          'category': 'Maintenance',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '15',
-          'name': 'Atorvastatin 20mg',
-          'dosage': 'Tablet',
-          'price': '32.00',
-          'stockCount': 120,
-          'rxRequired': true,
-          'category': 'Maintenance',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '16',
-          'name': 'Losartan 50mg',
-          'dosage': 'Tablet',
-          'price': '22.00',
-          'stockCount': 380,
-          'rxRequired': true,
-          'category': 'Maintenance',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '17',
-          'name': 'Omeprazole 20mg',
-          'dosage': 'Capsule',
-          'price': '45.00',
-          'stockCount': 210,
-          'rxRequired': true,
-          'category': 'Digestive',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '18',
-          'name': 'Salbutamol 2mg',
-          'dosage': 'Tablet',
-          'price': '12.00',
-          'stockCount': 140,
-          'rxRequired': true,
-          'category': 'Respiratory',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '19',
-          'name': 'Clindamycin 300mg',
-          'dosage': 'Capsule',
-          'price': '65.00',
-          'stockCount': 95,
-          'rxRequired': true,
-          'category': 'Antibiotics',
-          'drugstoreId': '1',
-        },
-        {
-          'id': '20',
-          'name': 'Prednisone 5mg',
-          'dosage': 'Tablet',
-          'price': '8.50',
-          'stockCount': 110,
-          'rxRequired': true,
-          'category': 'Maintenance',
-          'drugstoreId': '1',
-        },
-      ],
-      '2': [
-        {
-          'id': '21',
-          'name': 'Biogesic 500mg',
-          'dosage': 'Tablet',
-          'price': '7.25',
-          'stockCount': 400,
-          'rxRequired': false,
-          'category': 'Pain Relief',
-          'drugstoreId': '2',
-        },
-        {
-          'id': '22',
-          'name': 'Neozep Forte',
-          'dosage': 'Tablet',
-          'price': '7.75',
-          'stockCount': 300,
-          'rxRequired': false,
-          'category': 'Cough & Cold',
-          'drugstoreId': '2',
-        },
-        {
-          'id': '23',
-          'name': 'Alaxan FR',
-          'dosage': 'Capsule',
-          'price': '11.50',
-          'stockCount': 220,
-          'rxRequired': false,
-          'category': 'Pain Relief',
-          'drugstoreId': '2',
-        },
-        {
-          'id': '24',
-          'name': 'Paracetamol Generic',
-          'dosage': 'Tablet',
-          'price': '3.00',
-          'stockCount': 1000,
-          'rxRequired': false,
-          'category': 'Pain Relief',
-          'drugstoreId': '2',
-        },
-        {
-          'id': '25',
-          'name': 'Amoxicillin 500mg',
-          'dosage': 'Capsule',
-          'price': '16.50',
-          'stockCount': 310,
-          'rxRequired': true,
-          'category': 'Antibiotics',
-          'drugstoreId': '2',
-        },
-      ],
-      '3': [
-        {
-          'id': '26',
-          'name': 'Multivitamin + Zinc',
-          'dosage': 'Capsule',
-          'price': '18.50',
-          'stockCount': 140,
-          'rxRequired': false,
-          'category': 'Vitamins',
-          'drugstoreId': '3',
-        },
-        {
-          'id': '27',
-          'name': 'Fish Oil 1000mg',
-          'dosage': 'Softgel',
-          'price': '22.00',
-          'stockCount': 90,
-          'rxRequired': false,
-          'category': 'Vitamins',
-          'drugstoreId': '3',
-        },
-        {
-          'id': '28',
-          'name': 'Insulin Glargine',
-          'dosage': 'Injection Pen',
-          'price': '980.00',
-          'stockCount': 30,
-          'rxRequired': true,
-          'category': 'Maintenance',
-          'drugstoreId': '3',
-        },
-        {
-          'id': '29',
-          'name': 'Ventolin Evohaler',
-          'dosage': 'Inhaler MDI',
-          'price': '420.00',
-          'stockCount': 45,
-          'rxRequired': true,
-          'category': 'Respiratory',
-          'drugstoreId': '3',
-        },
-      ],
-    };
-    return catalog[storeId] ?? catalog['1']!;
-  }
-
-  // Applies the same search/category filtering the backend would, so
-  // typing in the search box or tapping a category chip still works
-  // while running on fallback data.
-  List<Map<String, dynamic>> _filterFallbackInventory({
-    String? query,
-    String? category,
-  }) {
-    final all = _getStoreInventoryByID(_storeId);
-    final q = (query ?? '').trim().toLowerCase();
-    return all.where((item) {
-      final matchesCategory =
-          category == null || category.isEmpty || category == 'All'
-          ? true
-          : item['category'] == category;
-      final matchesQuery =
-          q.isEmpty || item['name'].toString().toLowerCase().contains(q);
-      return matchesCategory && matchesQuery;
-    }).toList();
-  }
-
-  Map<String, dynamic> _getStoreMetaByID(String storeId) {
-    final storeMap = {
-      '1': {
-        'drugstoreName': 'MedPlus Drugstore',
-        'branch': 'Colon Street',
-        'openNow': true,
-        'hours': '8:00 - 21:00',
-        'phone': '+63 912 345 6789',
-        'facebook': 'https://facebook.com/medplus',
-        'location': 'Colon St., Cebu City',
-        'distance': '0.5 km',
-      },
-      '2': {
-        'drugstoreName': 'Generika Drugstore',
-        'branch': 'Osmeña Blvd',
-        'openNow': true,
-        'hours': '8:00 - 20:00',
-        'phone': '+63 912 345 6790',
-        'facebook': 'https://facebook.com/generika',
-        'location': 'Osmeña Blvd, Cebu City, Cebu, Philippines',
-        'distance': '1.2 km',
-      },
-      '3': {
-        'drugstoreName': 'Wellness Pharmacy',
-        'branch': 'Banilad Town Center',
-        'openNow': true,
-        'hours': '9:00 - 21:00',
-        'phone': '+63 912 345 6791',
-        'facebook': 'https://facebook.com/wellness',
-        'location': 'Banilad, Cebu City',
-        'distance': '2.0 km',
-      },
-    };
-    return storeMap[storeId] ?? storeMap['1']!;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -433,7 +74,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
       _selectedCategory = 0;
       _quantities.clear();
       _searchController.clear();
-      _fetchStoreAndInventory();
+      _fetchInventory();
     }
   }
 
@@ -442,6 +83,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
     _debounce?.cancel();
     _addFeedbackDebounce?.cancel();
     _searchController.dispose();
+    _client.close();
     super.dispose();
   }
 
@@ -457,75 +99,51 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
     });
   }
 
-  Future<void> _fetchStoreAndInventory() async {
-    setState(() => _isLoading = true);
-    try {
-      // fetch store meta (optional endpoint)
-      final metaUri = Uri.parse('$backendUrl/api/stores/$_storeId');
-      final metaResp = await http
-          .get(metaUri)
-          .timeout(const Duration(seconds: 8));
-      if (metaResp.statusCode == 200) {
-        _storeMeta = jsonDecode(metaResp.body) as Map<String, dynamic>;
-      } else {
-        // fallback sample meta based on store ID
-        _storeMeta = _getStoreMetaByID(_storeId);
-      }
-
-      await _fetchInventory();
-    } catch (_) {
-      // show fallback meta & inventory based on store ID
-      _storeMeta ??= _getStoreMetaByID(_storeId);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _fetchInventory({String? query, String? category}) async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
-      final params = <String, String>{};
-      if (query != null && query.isNotEmpty) {
-        params['search'] = query;
+      final uri = Uri.parse('$backendUrl/api/stores/$_storeId/inventory');
+      final response = await _client
+          .get(uri)
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) {
+        throw const FormatException('Inventory unavailable');
       }
-      if (category != null && category.isNotEmpty && category != 'All') {
-        params['category'] = category;
+      final data = jsonDecode(response.body);
+      if (data is! Map || data['inventory'] is! List || data['store'] is! Map) {
+        throw const FormatException('Invalid inventory response');
       }
-
-      final uri = Uri.parse(
-        '$backendUrl/api/stores/$_storeId/inventory',
-      ).replace(queryParameters: params.isEmpty ? null : params);
-      final resp = await http.get(uri).timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final body = jsonDecode(resp.body);
-        if (body is List && body.isNotEmpty) {
-          setState(() => _inventory = body);
-        } else {
-          // Backend responded but had nothing for this store/filter yet
-          // (e.g. inventory isn't seeded). Fall back so the store still
-          // shows its full catalog under "All" instead of an empty list.
-          setState(
-            () => _inventory = _filterFallbackInventory(
-              query: query,
-              category: category,
-            ),
-          );
-        }
-      } else {
-        setState(
-          () => _inventory = _filterFallbackInventory(
-            query: query,
-            category: category,
-          ),
-        );
+      if ((data['inventory'] as List).any((item) => item is! Map)) {
+        throw const FormatException('Invalid inventory item');
       }
+      final inventory = (data['inventory'] as List).where((item) {
+        final matchesCategory =
+            category == null ||
+            category == 'All' ||
+            item['medicineCategory'] == category;
+        final search = (query ?? '').trim().toLowerCase();
+        final matchesQuery =
+            search.isEmpty ||
+            '${item['name']} ${item['genericName']}'.toLowerCase().contains(
+              search,
+            );
+        return matchesCategory && matchesQuery;
+      }).toList();
+      if (!mounted) return;
+      setState(() {
+        _storeMeta = Map<String, dynamic>.from(data['store'] as Map);
+        _inventory = inventory;
+      });
     } catch (_) {
-      setState(
-        () => _inventory = _filterFallbackInventory(
-          query: query,
-          category: category,
-        ),
-      );
+      if (!mounted) return;
+      setState(() {
+        _inventory = [];
+        _storeMeta = null;
+        _loadError = 'Unable to load pharmacy details and stock. Please retry.';
+      });
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -559,7 +177,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
     final name = item['name']?.toString() ?? 'Unknown';
     final price = item['price']?.toString() ?? 'N/A';
     final drugstoreName =
-        _storeMeta?['drugstoreName']?.toString() ??
+        _storeMeta?['store_name']?.toString() ??
         item['drugstoreName']?.toString() ??
         '';
     final drugstoreId = item['drugstoreId']?.toString() ?? _storeId;
@@ -633,10 +251,10 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final storeName = _storeMeta?['drugstoreName'] ?? 'Store';
+    final storeName = _storeMeta?['store_name'] ?? 'Store';
     final branch = _storeMeta?['branch'] ?? '';
-    final openNow = _storeMeta?['openNow'] == true;
-    final hours = _storeMeta?['hours'] ?? '';
+    final openNow = _storeMeta?['openNow'];
+    final hours = _storeMeta?['operating_hours'] ?? '';
     final phone = _storeMeta?['phone'] ?? 'N/A';
     final fb = _storeMeta?['facebook'] ?? 'N/A';
     final distance = _storeMeta?['distance'] ?? '';
@@ -674,15 +292,19 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: openNow
+                          color: openNow == true
                               ? Colors.green.shade100
                               : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          openNow ? 'Open now' : 'Closed',
+                          openNow == null
+                              ? 'Hours not confirmed'
+                              : openNow == true
+                              ? 'Open now'
+                              : 'Closed',
                           style: TextStyle(
-                            color: openNow
+                            color: openNow == true
                                 ? Colors.green.shade700
                                 : Colors.grey.shade700,
                             fontWeight: FontWeight.w600,
@@ -750,7 +372,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                   TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Search in this store...',
+                      labelText: 'Search in this store',
                       prefixIcon: const Icon(Icons.search),
                       contentPadding: const EdgeInsets.symmetric(vertical: 14),
                       border: OutlineInputBorder(
@@ -788,10 +410,10 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                       setState(() => _selectedCategory = i);
                       _fetchInventory(
                         query: _searchController.text,
-                        category: selected ? null : _categories[i],
+                        category: i == 0 ? null : _categories[i],
                       );
                     },
-                    selectedColor: Colors.green,
+                    selectedColor: const Color(0xFF2E7D32),
                     backgroundColor: Colors.white,
                     labelStyle: TextStyle(
                       color: selected ? Colors.white : Colors.black87,
@@ -810,7 +432,8 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                   ? ListView.separated(
                       padding: const EdgeInsets.all(12),
                       itemCount: 5,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) => Shimmer.fromColors(
                         baseColor: Colors.grey[300]!,
                         highlightColor: Colors.grey[100]!,
@@ -824,7 +447,19 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                       ),
                     )
                   : _inventory.isEmpty
-                  ? const Center(child: Text('No items found in this store.'))
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_loadError ?? 'No items found in this store.'),
+                          if (_loadError != null)
+                            TextButton(
+                              onPressed: _fetchInventory,
+                              child: const Text('Retry'),
+                            ),
+                        ],
+                      ),
+                    )
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),
                       itemCount: _inventory.length,
@@ -834,7 +469,7 @@ class _StoreDetailScreenState extends State<StoreDetailScreen> {
                         final item = _inventory[index] as Map<String, dynamic>;
                         final id = item['id']?.toString() ?? index.toString();
                         final name = item['name']?.toString() ?? 'Unknown';
-                        final dosage = item['dosage']?.toString() ?? '';
+                        final dosage = item['category']?.toString() ?? '';
                         final price = item['price']?.toString() ?? 'N/A';
                         final stock = (item['stockCount'] is int)
                             ? item['stockCount'] as int
@@ -1047,7 +682,15 @@ class _StepperButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 18)),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(
+            icon,
+            size: 18,
+            semanticLabel: icon == Icons.add ? 'Increase quantity' : 'Decrease quantity',
+          ),
+        ),
       ),
     );
   }

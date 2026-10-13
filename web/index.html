@@ -21,7 +21,8 @@
 </head>
 <body>
 
-  <div class="app-container">
+  <div class="app-container" inert>
+    <a class="skip-link" href="#mainViewContainer">Skip to content</a>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -65,10 +66,10 @@
         <div class="topbar-right">
           <div class="status-pill">
             <div class="pulse-dot"></div>
-            <span>Network Live & Online</span>
+            <span>Demo portal · sample branch data</span>
           </div>
 
-          <button class="topbar-btn" title="System Alerts">
+          <button class="topbar-btn" title="System Alerts" aria-label="System alerts (unavailable)" disabled>
             <i class="fa-solid fa-bell"></i>
             <div class="indicator"></div>
           </button>
@@ -80,7 +81,7 @@
       </header>
 
       <!-- Dynamic Content View Area -->
-      <main class="content-body" id="mainViewContainer">
+      <main class="content-body" id="mainViewContainer" tabindex="-1">
         <!-- Views rendered by app.js -->
       </main>
     </div>
@@ -112,7 +113,7 @@
 
         <form id="loginForm" onsubmit="handleLoginSubmit(event)">
           <div class="form-group" id="pharmacyBranchSelectGroup" style="display: none;">
-            <label class="form-label">Select Pharmacy Branch</label>
+            <label class="form-label" for="loginBranchSelect">Select Pharmacy Branch</label>
             <div class="input-with-icon">
               <i class="fa-solid fa-store"></i>
               <select id="loginBranchSelect" onchange="onLoginBranchChange()">
@@ -124,19 +125,19 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Admin Email Address</label>
+            <label class="form-label" for="loginEmail">Demo Email Address</label>
             <div class="input-with-icon">
               <i class="fa-solid fa-envelope"></i>
-              <input type="email" id="loginEmail" required value="admin@nearpill.com" placeholder="admin@nearpill.com">
+              <input type="email" id="loginEmail" required value="admin@nearpill.com" placeholder="admin@nearpill.com" autocomplete="username" autofocus>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Password</label>
+            <label class="form-label" for="loginPassword">Demo Password</label>
             <div class="input-with-icon">
               <i class="fa-solid fa-lock"></i>
               <input type="password" id="loginPassword" required value="admin123" placeholder="••••••••">
-              <i class="fa-solid fa-eye password-toggle" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+              <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePasswordVisibility('loginPassword', this)"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
             </div>
           </div>
 
@@ -146,7 +147,8 @@
         </form>
 
         <div class="demo-chips-container">
-          <div class="demo-chips-title">Instant Quick Demo Credentials (1-Click)</div>
+          <p><a href="policies.html">Privacy, cancellations, terms and browser storage</a></p>
+          <div class="demo-chips-title">Demo access only. Do not enter real patient information.</div>
           <div class="demo-chips-wrapper">
             <button type="button" class="demo-chip" onclick="quickDemoLogin('admin')">
               <i class="fa-solid fa-key"></i> Platform Owner

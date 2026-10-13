@@ -34,6 +34,7 @@ function checkUrlSlug() {
 }
 
 function hideLoginOverlay() {
+  document.querySelector('.app-container').inert = false;
   const overlay = document.getElementById("loginOverlay");
   if (overlay) {
     overlay.classList.add("hidden");
@@ -45,6 +46,7 @@ function hideLoginOverlay() {
 }
 
 function showLoginOverlay() {
+  document.querySelector('.app-container').inert = true;
   const overlay = document.getElementById("loginOverlay");
   if (overlay) {
     overlay.classList.remove("hidden");
@@ -52,6 +54,7 @@ function showLoginOverlay() {
     overlay.style.visibility = "visible";
     overlay.style.opacity = "1";
     overlay.style.pointerEvents = "auto";
+    document.getElementById('loginEmail').focus();
   }
 }
 
@@ -177,16 +180,19 @@ function logoutSession() {
 
 function togglePasswordVisibility(inputId, iconEl) {
   const input = document.getElementById(inputId);
+  const icon = iconEl.querySelector('i');
   if (input) {
     if (input.type === "password") {
       input.type = "text";
-      iconEl.classList.remove("fa-eye");
-      iconEl.classList.add("fa-eye-slash");
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
     } else {
       input.type = "password";
-      iconEl.classList.remove("fa-eye-slash");
-      iconEl.classList.add("fa-eye");
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
     }
+    iconEl.setAttribute('aria-label', input.type === 'password' ? 'Show password' : 'Hide password');
+    iconEl.setAttribute('aria-pressed', String(input.type === 'text'));
   }
 }
 
@@ -205,18 +211,18 @@ function updateSidebarNav() {
 
     navContainer.innerHTML = `
       <div class="nav-section-title">CENTRAL PLATFORM ADMIN</div>
-      <a class="nav-item ${activeTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
+      <button type="button" class="nav-item ${activeTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
         <i class="fa-solid fa-chart-line"></i> Dashboard & Analytics
-      </a>
-      <a class="nav-item ${activeTab === 'pharmacies' ? 'active' : ''}" onclick="switchTab('pharmacies')">
+      </button>
+      <button type="button" class="nav-item ${activeTab === 'pharmacies' ? 'active' : ''}" onclick="switchTab('pharmacies')">
         <i class="fa-solid fa-store"></i> Partner Pharmacies
-      </a>
-      <a class="nav-item ${activeTab === 'global-orders' ? 'active' : ''}" onclick="switchTab('global-orders')">
+      </button>
+      <button type="button" class="nav-item ${activeTab === 'global-orders' ? 'active' : ''}" onclick="switchTab('global-orders')">
         <i class="fa-solid fa-box"></i> Global Order Monitor
-      </a>
-      <a class="nav-item ${activeTab === 'master-catalog' ? 'active' : ''}" onclick="switchTab('master-catalog')">
+      </button>
+      <button type="button" class="nav-item ${activeTab === 'master-catalog' ? 'active' : ''}" onclick="switchTab('master-catalog')">
         <i class="fa-solid fa-capsules"></i> Standard Medicine Catalog
-      </a>
+      </button>
     `;
   } else {
     const branch = NearPillData.pharmacies.find(p => p.id === activeBranchId) || NearPillData.pharmacies[0];
@@ -230,27 +236,28 @@ function updateSidebarNav() {
 
     navContainer.innerHTML = `
       <div class="nav-section-title">BRANCH PHARMACY WORKSPACE</div>
-      <a class="nav-item ${activeTab === 'rx-queue' ? 'active' : ''}" onclick="switchTab('rx-queue')">
+      <button type="button" class="nav-item ${activeTab === 'rx-queue' ? 'active' : ''}" onclick="switchTab('rx-queue')">
         <i class="fa-solid fa-file-prescription"></i> Rx Verification
         ${pendingRxCount > 0 ? `<span class="badge badge-amber">${pendingRxCount}</span>` : ''}
-      </a>
-      <a class="nav-item ${activeTab === 'branch-fulfillment' ? 'active' : ''}" onclick="switchTab('branch-fulfillment')">
+      </button>
+      <button type="button" class="nav-item ${activeTab === 'branch-fulfillment' ? 'active' : ''}" onclick="switchTab('branch-fulfillment')">
         <i class="fa-solid fa-boxes-packing"></i> Order Fulfillment
-      </a>
-      <a class="nav-item ${activeTab === 'branch-inventory' ? 'active' : ''}" onclick="switchTab('branch-inventory')">
+      </button>
+      <button type="button" class="nav-item ${activeTab === 'branch-inventory' ? 'active' : ''}" onclick="switchTab('branch-inventory')">
         <i class="fa-solid fa-boxes-stacked"></i> Branch Inventory
-      </a>
-      <a class="nav-item ${activeTab === 'branch-analytics' ? 'active' : ''}" onclick="switchTab('branch-analytics')">
+      </button>
+      <button type="button" class="nav-item ${activeTab === 'branch-analytics' ? 'active' : ''}" onclick="switchTab('branch-analytics')">
         <i class="fa-solid fa-chart-pie"></i> Branch Sales & Reports
-      </a>
+      </button>
     `;
   }
 }
 
-function switchTab(tabId) {
+async function switchTab(tabId) {
   activeTab = tabId;
   updateSidebarNav();
-  renderCurrentView();
+  await renderCurrentView();
+  document.getElementById('mainViewContainer').focus();
 }
 
 async function renderCurrentView() {
@@ -388,7 +395,7 @@ async function renderPharmaciesView(container) {
       <div class="section-header">
         <div>
           <div class="section-title">Onboarded Drugstore Network (${pharmacies.length})</div>
-          <div class="section-subtitle">Manage FDA-licensed pharmacy partners</div>
+          <div class="section-subtitle">Manage pharmacy listings; verify licences separately</div>
         </div>
         <button class="btn btn-primary" onclick="openAddPharmacyModal()">
           <i class="fa-solid fa-plus"></i> Onboard New Partner
@@ -415,7 +422,7 @@ async function renderPharmaciesView(container) {
                   <strong style="color: var(--color-primary-dark);">${p.name || p.fullName}</strong><br>
                   <span style="font-size: 11px; color: var(--color-text-muted);">${p.address || 'Metro Manila Branch'}</span>
                 </td>
-                <td><code>${p.licenseNo || 'FDA-PH-ACTIVE'}</code></td>
+                <td><code>${p.licenseNo || 'Not provided'}</code></td>
                 <td>${p.manager || 'RPh Pharmacist'}</td>
                 <td><code>#${p.slug || p.id}</code></td>
                 <td>
@@ -593,9 +600,9 @@ function renderRxQueueView(container) {
                     <code>${o.rxPrescription.prcLicense}</code>
                   </td>
                   <td>
-                    <div class="rx-thumbnail" onclick="openRxViewerModal('${o.id}')" title="Click to view Prescription Paper">
+                    <button type="button" class="rx-thumbnail" aria-label="View prescription" onclick="openRxViewerModal('${o.id}')" title="Click to view Prescription Paper">
                       <i class="fa-solid fa-file-prescription"></i>
-                    </div>
+                    </button>
                   </td>
                   <td>
                     <button class="btn btn-primary btn-sm" onclick="openRxViewerModal('${o.id}')">
@@ -741,13 +748,13 @@ function renderBranchAnalyticsView(container) {
       <div class="stat-card">
         <div class="stat-title">FULFILLED ORDERS</div>
         <div class="stat-value">${branch.totalOrders}</div>
-        <div class="stat-footer"><span class="trend-up">100% Rx Compliance</span></div>
+        <div class="stat-footer"><span class="trend-up">Sample branch totals</span></div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-title">PATIENT RATING</div>
+        <div class="stat-title">SAMPLE RATING</div>
         <div class="stat-value">★ ${branch.rating} / 5.0</div>
-        <div class="stat-footer trend-up"><i class="fa-solid fa-heart"></i> Excellent feedback</div>
+        <div class="stat-footer trend-up"><i class="fa-solid fa-heart"></i> Demo value; no customer reviews collected</div>
       </div>
     </div>
 
@@ -778,13 +785,13 @@ function openRxViewerModal(orderId) {
   const rx = order.rxPrescription;
 
   const modalHtml = `
-    <div class="modal-overlay active" id="rxModal">
+    <dialog class="modal-overlay active" id="rxModal" aria-label="Prescription review" onclose="this.remove()">
       <div class="modal-card">
         <div class="modal-header">
           <div class="modal-title">
             <i class="fa-solid fa-file-prescription"></i> Prescription Review & Verification
           </div>
-          <button class="modal-close" onclick="closeModal('rxModal')"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Close dialog" onclick="closeModal('rxModal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="rx-viewer-container">
@@ -813,9 +820,9 @@ function openRxViewerModal(orderId) {
               <div>
                 <h4 style="color: var(--color-primary-dark); margin-bottom: 10px;">Clinical Safety Checklist</h4>
                 <ul style="font-size: 12px; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
-                  <li><i class="fa-solid fa-square-check" style="color: var(--color-primary);"></i> Doctor PRC License is valid</li>
-                  <li><i class="fa-solid fa-square-check" style="color: var(--color-primary);"></i> Patient name matches account name</li>
-                  <li><i class="fa-solid fa-square-check" style="color: var(--color-primary);"></i> Dosage format complies with FDA guidelines</li>
+                  <li><i class="fa-solid fa-square" style="color: var(--color-primary);"></i> Verify the doctor's PRC licence before approval</li>
+                  <li><i class="fa-solid fa-square" style="color: var(--color-primary);"></i> Check patient identity against the prescription</li>
+                  <li><i class="fa-solid fa-square" style="color: var(--color-primary);"></i> Review the medicine, dosage and prescription validity</li>
                 </ul>
               </div>
 
@@ -831,15 +838,19 @@ function openRxViewerModal(orderId) {
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   `;
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.getElementById("rxModal").showModal();
 }
 
 function closeModal(modalId) {
   const el = document.getElementById(modalId);
-  if (el) el.remove();
+  if (el) {
+    el.close();
+    el.remove();
+  }
 }
 
 async function approveRxPrescription(orderId) {
@@ -913,23 +924,23 @@ async function markOrderReady(orderId) {
 
 function openAddPharmacyModal() {
   const modalHtml = `
-    <div class="modal-overlay active" id="addPharmacyModal">
+    <dialog class="modal-overlay active" id="addPharmacyModal" aria-label="Add pharmacy" onclose="this.remove()">
       <div class="modal-card">
         <div class="modal-header">
           <div class="modal-title"><i class="fa-solid fa-store"></i> Onboard Partner Drugstore</div>
-          <button class="modal-close" onclick="closeModal('addPharmacyModal')"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Close dialog" onclick="closeModal('addPharmacyModal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Drugstore Chain & Branch Name</label>
+            <label class="form-label" for="newPharmName">Drugstore Chain & Branch Name</label>
             <input type="text" id="newPharmName" class="filter-select" style="width:100%" placeholder="e.g. Mercury Drug - Fairview">
           </div>
           <div class="form-group">
-            <label class="form-label">FDA Operating License Number</label>
+            <label class="form-label" for="newPharmLicense">FDA Operating License Number</label>
             <input type="text" id="newPharmLicense" class="filter-select" style="width:100%" placeholder="FDA-PH-XXXXXX">
           </div>
           <div class="form-group">
-            <label class="form-label">URL Slug</label>
+            <label class="form-label" for="newPharmSlug">URL Slug</label>
             <input type="text" id="newPharmSlug" class="filter-select" style="width:100%" placeholder="e.g. mercury-drug-fairview">
           </div>
           <button class="btn btn-primary" style="width:100%" onclick="saveNewPharmacy()">
@@ -937,9 +948,10 @@ function openAddPharmacyModal() {
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   `;
   document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.getElementById("addPharmacyModal").showModal();
 }
 
 function saveNewPharmacy() {
@@ -975,23 +987,23 @@ function approvePharmacy(pharmacyId) {
 
 function openAddMedicineModal() {
   const modalHtml = `
-    <div class="modal-overlay active" id="addMedicineModal">
+    <dialog class="modal-overlay active" id="addMedicineModal" aria-label="Add medicine" onclose="this.remove()">
       <div class="modal-card">
         <div class="modal-header">
           <div class="modal-title"><i class="fa-solid fa-capsules"></i> Add Master Medication</div>
-          <button class="modal-close" onclick="closeModal('addMedicineModal')"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Close dialog" onclick="closeModal('addMedicineModal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Brand Name</label>
+            <label class="form-label" for="newMedBrand">Brand Name</label>
             <input type="text" id="newMedBrand" class="filter-select" style="width:100%" placeholder="e.g. Medicol Advance">
           </div>
           <div class="form-group">
-            <label class="form-label">Generic Composition</label>
+            <label class="form-label" for="newMedGeneric">Generic Composition</label>
             <input type="text" id="newMedGeneric" class="filter-select" style="width:100%" placeholder="Ibuprofen 200mg">
           </div>
           <div class="form-group">
-            <label class="form-label">Standard Price (₱)</label>
+            <label class="form-label" for="newMedPrice">Standard Price (₱)</label>
             <input type="number" step="0.25" id="newMedPrice" class="filter-select" style="width:100%" placeholder="8.50">
           </div>
           <button class="btn btn-primary" style="width:100%" onclick="saveNewMedicine()">
@@ -999,9 +1011,10 @@ function openAddMedicineModal() {
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   `;
   document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.getElementById("addMedicineModal").showModal();
 }
 
 function saveNewMedicine() {
@@ -1035,6 +1048,7 @@ function showToast(message, type = "success") {
     container = document.createElement("div");
     container.id = "toastContainer";
     container.className = "toast-container";
+    container.setAttribute('role', 'status');
     document.body.appendChild(container);
   }
 

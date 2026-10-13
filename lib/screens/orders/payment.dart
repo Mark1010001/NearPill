@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/service_notices.dart';
 
 import 'confirmation.dart';
 
@@ -17,7 +18,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
+      appBar: AppBar(title: const Text('Payment preview')),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -32,9 +33,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 24),
-            _buildPlanCard(0, 'Full Amount', 'Pay the full price now'),
+            _buildPlanCard(0, 'Full Amount', 'Preview only; no online charge'),
             const SizedBox(height: 14),
-            _buildPlanCard(1, '50% Deposit', 'Reserve with half payment'),
+            _buildPlanCard(1, '50% Deposit', 'Preview only; no online charge'),
             const SizedBox(height: 24),
             Card(
               color: const Color(0xFFFFF3E0),
@@ -46,7 +47,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Important: Payments are non-refundable once processed.',
+                        paymentNotice,
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -124,7 +125,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: selected ? const Color(0xFF4CAF50) : Colors.transparent,
+            color: selected ? const Color(0xFF2E7D32) : Colors.transparent,
             width: 2,
           ),
         ),
@@ -142,12 +143,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: selected
-                          ? const Color(0xFF4CAF50)
+                          ? const Color(0xFF2E7D32)
                           : Colors.grey.shade400,
                       width: 2,
                     ),
                     color: selected
-                        ? const Color(0xFF4CAF50)
+                        ? const Color(0xFF2E7D32)
                         : Colors.transparent,
                   ),
                   child: selected

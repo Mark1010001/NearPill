@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import '../../config/service_notices.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart';
@@ -8,6 +9,7 @@ import '../../services/order_service.dart';
 import '../../utils/formatters.dart';
 import 'package:flutter/services.dart';
 import 'confirmation.dart';
+import '../policies_screen.dart';
 
 /// Single-page checkout, replacing the old two separate full-screen
 /// navigations (CheckoutScreen -> PaymentScreen). Modern commerce apps
@@ -49,8 +51,10 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
 
     try {
       final user = await authService.getMe();
-      if (user.phone == null || user.phone!.isEmpty || 
-          user.birthDate == null || user.birthDate!.isEmpty) {
+      if (user.phone == null ||
+          user.phone!.isEmpty ||
+          user.birthDate == null ||
+          user.birthDate!.isEmpty) {
         if (mounted) {
           _showMissingInfoDialog(
             context,
@@ -137,7 +141,8 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                         prefixIcon: Icon(Icons.phone),
                       ),
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Enter phone';
+                        if (val == null || val.trim().isEmpty)
+                          return 'Enter phone';
                         if (val.length < 10) return 'Invalid phone length';
                         return null;
                       },
@@ -146,9 +151,7 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                     TextFormField(
                       controller: birthdateController,
                       keyboardType: TextInputType.datetime,
-                      inputFormatters: [
-                        DateTextFormatter(),
-                      ],
+                      inputFormatters: [DateTextFormatter()],
                       decoration: const InputDecoration(
                         labelText: 'Birthdate (MM/DD/YYYY)',
                         hintText: 'MM/DD/YYYY',
@@ -161,39 +164,49 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: isSaving ? null : () async {
-                          if (formKey.currentState!.validate()) {
-                            setModalState(() => isSaving = true);
-                            try {
-                              await authService.updateProfile(
-                                phone: phoneController.text.trim(),
-                                birthDate: birthdateController.text.trim(),
-                              );
-                              if (!context.mounted) return;
-                              Navigator.pop(ctx);
-                              
-                              // Automatically resume checkout!
-                              await _placeOrderCore();
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Failed to save info. Please try again.'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            } finally {
-                              if (context.mounted) {
-                                setModalState(() => isSaving = false);
-                              }
-                            }
-                          }
-                        },
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                if (formKey.currentState!.validate()) {
+                                  setModalState(() => isSaving = true);
+                                  try {
+                                    await authService.updateProfile(
+                                      phone: phoneController.text.trim(),
+                                      birthDate: birthdateController.text
+                                          .trim(),
+                                    );
+                                    if (!context.mounted) return;
+                                    Navigator.pop(ctx);
+
+                                    // Automatically resume checkout!
+                                    await _placeOrderCore();
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Failed to save info. Please try again.',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  } finally {
+                                    if (context.mounted) {
+                                      setModalState(() => isSaving = false);
+                                    }
+                                  }
+                                }
+                              },
                         child: isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text(
                                 'Save & Continue',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                       ),
                     ),
@@ -281,15 +294,14 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
 
       final message = error is DioException
           ? (error.response?.data is Map
-              ? (error.response?.data['error']?.toString() ?? 'Could not place order. Please try again.')
-              : 'Could not place order. Please try again.')
+                ? (error.response?.data['error']?.toString() ??
+                      'Could not place order. Please try again.')
+                : 'Could not place order. Please try again.')
           : 'Could not place order. Please try again.';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -337,7 +349,7 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                       child: const Center(
                         child: Icon(
                           Icons.map,
-                          color: Color(0xFF4CAF50),
+                          color: Color(0xFF2E7D32),
                           size: 30,
                         ),
                       ),
@@ -365,7 +377,7 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                             selected: selected,
                             onSelected: (_) =>
                                 setState(() => _selectedDateIndex = index),
-                            selectedColor: const Color(0xFF4CAF50),
+                            selectedColor: const Color(0xFF2E7D32),
                             backgroundColor: Colors.grey.shade100,
                             labelStyle: TextStyle(
                               color: selected ? Colors.white : Colors.black87,
@@ -392,20 +404,20 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
               ),
               const SizedBox(height: 16),
               _SectionCard(
-                title: 'Payment',
+                title: 'Payment preview',
                 child: Column(
                   children: [
                     _PlanTile(
                       selected: _paymentPlan == 0,
                       title: 'Full Amount',
-                      subtitle: 'Pay the full price now',
+                      subtitle: 'Preview the full amount; no online charge',
                       onTap: () => setState(() => _paymentPlan = 0),
                     ),
                     const SizedBox(height: 10),
                     _PlanTile(
                       selected: _paymentPlan == 1,
                       title: '50% Deposit',
-                      subtitle: 'Reserve with half payment',
+                      subtitle: 'Preview a deposit; no online charge',
                       onTap: () => setState(() => _paymentPlan = 1),
                     ),
                   ],
@@ -424,7 +436,7 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Payments are non-refundable once processed.',
+                        paymentNotice,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -433,6 +445,12 @@ class _CheckoutFlowScreenState extends State<CheckoutFlowScreen> {
                     ),
                   ],
                 ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PoliciesScreen()),
+                ),
+                child: const Text('Privacy, cancellations and terms'),
               ),
             ],
           ),
@@ -502,14 +520,15 @@ class _TimeSlotChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            color: selected ? const Color(0xFF2E7D32) : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
           color: selected ? const Color(0xFFE8F5E9) : Colors.white,
@@ -546,7 +565,7 @@ class _PlanTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            color: selected ? const Color(0xFF2E7D32) : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
         ),
@@ -559,11 +578,11 @@ class _PlanTile extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: selected
-                      ? const Color(0xFF4CAF50)
+                      ? const Color(0xFF2E7D32)
                       : Colors.grey.shade400,
                   width: 2,
                 ),
-                color: selected ? const Color(0xFF4CAF50) : Colors.transparent,
+                color: selected ? const Color(0xFF2E7D32) : Colors.transparent,
               ),
               child: selected
                   ? const Icon(Icons.check, size: 14, color: Colors.white)
@@ -636,7 +655,10 @@ class _PlaceOrderBar extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   totalPrice,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -644,7 +666,7 @@ class _PlaceOrderBar extends StatelessWidget {
           FilledButton(
             onPressed: isLoading ? null : onPlaceOrder,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
+              backgroundColor: const Color(0xFF2E7D32),
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

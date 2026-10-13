@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import 'policies_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key, required this.authService});
@@ -48,7 +49,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful. Please log in.')),
+        const SnackBar(
+          content: Text('Registration successful. Please log in.'),
+        ),
       );
       Navigator.of(context).pop();
     } on AuthException catch (error) {
@@ -81,6 +84,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             key: _formKey,
             child: Column(
               children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PoliciesScreen()),
+                  ),
+                  child: const Text('Privacy, cancellations and terms'),
+                ),
                 TextFormField(
                   controller: _fullNameController,
                   decoration: const InputDecoration(
@@ -106,9 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Email is required';
                     }
-                    final emailRegex = RegExp(
-                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                    );
+                    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
                     if (!emailRegex.hasMatch(value)) {
                       return 'Enter a valid email address';
                     }

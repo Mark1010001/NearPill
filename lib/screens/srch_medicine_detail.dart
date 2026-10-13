@@ -82,13 +82,13 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           color: enabled ? Colors.white : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: enabled ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+            color: enabled ? const Color(0xFF2E7D32) : Colors.grey.shade300,
           ),
         ),
         child: Icon(
           icon,
           size: 20,
-          color: enabled ? const Color(0xFF4CAF50) : Colors.grey,
+          color: enabled ? const Color(0xFF2E7D32) : Colors.grey,
         ),
       ),
     );
@@ -169,7 +169,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                               ),
                               child: const Icon(
                                 Icons.medical_services,
-                                color: Color(0xFF4CAF50),
+                                color: Color(0xFF2E7D32),
                                 size: 30,
                               ),
                             ),
@@ -208,7 +208,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                               child: const Text(
                                 'In stock',
                                 style: TextStyle(
-                                  color: Color(0xFF4CAF50),
+                                  color: Color(0xFF2E7D32),
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -315,7 +315,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                               _queueAddedToCartFeedback(_quantity);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
+                              backgroundColor: const Color(0xFF2E7D32),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),

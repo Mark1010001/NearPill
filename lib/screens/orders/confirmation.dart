@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/service_notices.dart';
 
 import '../../models/order_model.dart';
 
@@ -54,10 +55,10 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       ),
       OrderStage.completed => (
         Icons.check_circle,
-        const Color(0xFF4CAF50),
+        const Color(0xFF2E7D32),
         'Order Completed',
       ),
-      _ => (Icons.check_circle, const Color(0xFF4CAF50), 'Order Confirmed!'),
+      _ => (Icons.check_circle, const Color(0xFF2E7D32), 'Order Confirmed!'),
     };
 
     return Scaffold(
@@ -152,7 +153,7 @@ class _TimelineCard extends StatelessWidget {
                 child: Container(
                   height: 3,
                   color: reached
-                      ? const Color(0xFF4CAF50)
+                      ? const Color(0xFF2E7D32)
                       : Colors.grey.shade300,
                 ),
               );
@@ -216,7 +217,7 @@ class _StepDot extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+        color: active ? const Color(0xFF2E7D32) : Colors.grey.shade300,
         border: current
             ? Border.all(color: const Color(0xFFA5D6A7), width: 4)
             : null,
@@ -247,7 +248,7 @@ class _CountdownCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF4CAF50),
+                color: Color(0xFF2E7D32),
               ),
             ),
             const SizedBox(height: 4),
@@ -300,7 +301,7 @@ class _PickupCard extends StatelessWidget {
                   icon: const Icon(Icons.directions),
                   label: const Text('Directions'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: const Color(0xFF2E7D32),
                   ),
                 ),
               ),
@@ -339,9 +340,7 @@ class _CancelledCard extends StatelessWidget {
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              'This order was cancelled before it was prepared. '
-              'You were not charged, and any deposit will be refunded '
-              'to your original payment method within 3-5 business days.',
+              cancellationNotice,
               style: TextStyle(fontSize: 13, height: 1.4),
             ),
           ),
@@ -378,7 +377,7 @@ class _RateAndReorderCard extends StatelessWidget {
         children: [
           Icon(
             cancelled ? Icons.refresh : Icons.star_border,
-            color: cancelled ? const Color(0xFF4CAF50) : Colors.amber,
+            color: cancelled ? const Color(0xFF2E7D32) : Colors.amber,
             size: 28,
           ),
           const SizedBox(width: 14),

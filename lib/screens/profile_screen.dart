@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../models/order_model.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import 'policies_screen.dart';
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
 import '../utils/formatters.dart';
@@ -29,7 +30,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _phone = '';
   String _birthdate = '';
   String _email = '';
-  final bool _isVerified = true;
   bool _isLoadingUser = true;
 
   @override
@@ -181,7 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               content: Text(
                                 'Identity info updated successfully.',
                               ),
-                              backgroundColor: Color(0xFF4CAF50),
+                              backgroundColor: Color(0xFF2E7D32),
                             ),
                           );
                         } catch (e) {
@@ -216,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Rx Upload will be available soon.'),
-        backgroundColor: Color(0xFF4CAF50),
+        backgroundColor: Color(0xFF2E7D32),
       ),
     );
 
@@ -254,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ListTile(
                 leading: const CircleAvatar(
                   backgroundColor: Color(0xFFE8F5E9),
-                  child: Icon(Icons.person, color: Color(0xFF4CAF50)),
+                  child: Icon(Icons.person, color: Color(0xFF2E7D32)),
                 ),
                 title: Text('Myself ($_fullName)'),
                 subtitle: const Text('Uses your profile details'),
@@ -263,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Uploading Rx for $_fullName...'),
-                      backgroundColor: const Color(0xFF4CAF50),
+                      backgroundColor: const Color(0xFF2E7D32),
                     ),
                   );
                 },
@@ -319,7 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: Text(
             'Reordered ${items.length} items from ${order.storeName}! Added to Cart.',
           ),
-          backgroundColor: const Color(0xFF4CAF50),
+          backgroundColor: const Color(0xFF2E7D32),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -367,7 +367,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _isLoadingUser
           ? _buildSkeletonLoader()
           : RefreshIndicator(
-              color: const Color(0xFF4CAF50),
+              color: const Color(0xFF2E7D32),
               onRefresh: () async {
                 await _fetchUserData();
               },
@@ -390,6 +390,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     // Card 2: Essential Pharmacy Features (Fitts's Law, Hick's Law, Miller's Law)
                     _buildPharmacyFeaturesCard(),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const PoliciesScreen(),
+                        ),
+                      ),
+                      child: const Text('Privacy, cancellations and terms'),
+                    ),
                     const SizedBox(height: 24),
 
                     // Card 3: Essential Logistics & Help (Law of Proximity & Fitts's Law)
@@ -533,27 +541,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4CAF50),
+                      color: Color(0xFF2E7D32),
                     ),
                   ),
                 ),
-                if (_isVerified)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified,
-                        size: 20,
-                        color: Color(0xFF4CAF50),
-                      ),
-                    ),
-                  ),
               ],
             ),
             const SizedBox(width: 16),
@@ -578,7 +569,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           height: 14,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFF4CAF50),
+                            color: Color(0xFF2E7D32),
                           ),
                         ),
                     ],
@@ -604,7 +595,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icon(
                           Icons.shield_outlined,
                           size: 14,
-                          color: Color(0xFF4CAF50),
+                          color: Color(0xFF2E7D32),
                         ),
                         SizedBox(width: 4),
                         Text(
@@ -612,7 +603,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF4CAF50),
+                            color: Color(0xFF2E7D32),
                           ),
                         ),
                       ],
@@ -637,7 +628,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Row(
               children: const [
-                Icon(Icons.badge_outlined, color: Color(0xFF4CAF50), size: 20),
+                Icon(Icons.badge_outlined, color: Color(0xFF2E7D32), size: 20),
                 SizedBox(width: 8),
                 Text(
                   'Identity & Verification',
@@ -648,7 +639,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Fitts's Law: Accessible Edit Action Button
             IconButton(
               onPressed: _showEditProfileDialog,
-              icon: const Icon(Icons.edit_outlined, color: Color(0xFF4CAF50)),
+              icon: const Icon(Icons.edit_outlined, color: Color(0xFF2E7D32)),
               tooltip: 'Edit Identity Info',
             ),
           ],
@@ -735,7 +726,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: const [
             Icon(
               Icons.medical_services_outlined,
-              color: Color(0xFF4CAF50),
+              color: Color(0xFF2E7D32),
               size: 20,
             ),
             SizedBox(width: 8),
@@ -752,7 +743,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           width: double.infinity,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+              colors: [Color(0xFF2E7D32), Color(0xFF2E7D32)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -792,7 +783,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
                           Text(
-                            'Quick Camera Rx Upload',
+                            'Prescription upload · coming soon',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -844,7 +835,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: const [
                 Icon(
                   Icons.local_shipping_outlined,
-                  color: Color(0xFF4CAF50),
+                  color: Color(0xFF2E7D32),
                   size: 20,
                 ),
                 SizedBox(width: 8),
@@ -885,7 +876,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const Icon(
                               Icons.timelapse,
                               size: 16,
-                              color: Color(0xFF4CAF50),
+                              color: Color(0xFF2E7D32),
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -893,7 +884,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF4CAF50),
+                                color: Color(0xFF2E7D32),
                               ),
                             ),
                           ],
@@ -995,7 +986,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF4CAF50),
+                color: Color(0xFF2E7D32),
               ),
             ),
           ],
@@ -1016,7 +1007,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               height: 38,
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
+                  backgroundColor: const Color(0xFF2E7D32),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 0,

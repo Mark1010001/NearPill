@@ -15,22 +15,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, dynamic>> _pages = [
     {
       'title': 'Find Medicines Nearby',
-      'description': 'Finding a drugstore that has your medicine in stock, right now, nearby.',
+      'description':
+          'Browse medicines listed by pharmacies and confirm availability before pickup.',
       'image': 'assets/images/onboarding_0.png',
     },
     {
-      'title': 'Real-Time Geo-Search',
-      'description': 'Preview distance, store location, and live stock status before you step outside.',
+      'title': 'Browse Pharmacy Listings',
+      'description': 'View listed pharmacies and their medicine catalogs.',
       'image': 'assets/images/onboarding_1.png',
     },
     {
       'title': 'Pre-Order Instantly',
-      'description': 'Reserve your medicine ahead of time and don\'t wait in line at the pharmacy.',
+      'description':
+          'Submit an order request and check its status before visiting the pharmacy.',
       'image': 'assets/images/onboarding_2.png',
     },
     {
-      'title': 'Prescription Upload',
-      'description': 'Quickly upload your doctor\'s Rx for fast and easy pharmacist verification.',
+      'title': 'Prescription Medicines',
+      'description':
+          'Bring your prescription for pharmacist review. In-app prescription upload is not available yet.',
       'image': 'assets/images/onboarding_3.png',
     },
   ];
@@ -51,7 +54,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const AuthPortalScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const AuthPortalScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -80,7 +84,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
                 child: const Text(
                   'Skip',
-                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -105,6 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           width: 250,
                           height: 250,
                           child: Image.asset(
+                            excludeFromSemantics: true,
                             page['image'] as String,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
@@ -161,7 +169,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         width: _currentPage == index ? 24 : 8,
                         decoration: BoxDecoration(
-                          color: _currentPage == index ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+                          color: _currentPage == index
+                              ? const Color(0xFF2E7D32)
+                              : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -174,13 +184,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: FilledButton(
                       onPressed: _onNext,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF4CAF50),
+                        backgroundColor: const Color(0xFF2E7D32),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       child: Text(
-                        _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                        _currentPage == _pages.length - 1
+                            ? 'Get Started'
+                            : 'Next',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

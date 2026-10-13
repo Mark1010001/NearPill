@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
 import 'home.dart';
+import 'policies_screen.dart';
 
-const _green = Color(0xFF4CAF50);
+const _green = Color(0xFF2E7D32);
 const _deepGreen = Color(0xFF1F6B45);
 const _ink = Color(0xFF17332A);
 const _muted = Color(0xFF61726B);
@@ -24,8 +25,6 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _phone = TextEditingController();
-  final _phoneFocus = FocusNode();
   final _otp = List.generate(6, (_) => TextEditingController());
   final _otpFocus = List.generate(6, (_) => FocusNode());
 
@@ -33,7 +32,6 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
   int _step = 0;
   bool _showLoginPassword = false;
   bool _showRegisterPassword = false;
-  bool _biometric = false;
   bool _loading = false;
   String? _error;
 
@@ -53,7 +51,6 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
       _name,
       _email,
       _password,
-      _phone,
       ..._otp,
     ]) {
       controller.dispose();
@@ -61,7 +58,6 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
     for (final focusNode in _otpFocus) {
       focusNode.dispose();
     }
-    _phoneFocus.dispose();
     super.dispose();
   }
 
@@ -152,7 +148,9 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dev Mode (Resend sandbox): Auto-filled verification code ($devCode)'),
+            content: Text(
+              'Dev Mode (Resend sandbox): Auto-filled verification code ($devCode)',
+            ),
             backgroundColor: _deepGreen,
             duration: const Duration(seconds: 6),
           ),
@@ -216,7 +214,9 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Dev Mode (Resend sandbox): Auto-filled new code ($devCode)'),
+              content: Text(
+                'Dev Mode (Resend sandbox): Auto-filled new code ($devCode)',
+              ),
               backgroundColor: _deepGreen,
               duration: const Duration(seconds: 6),
             ),
@@ -360,21 +360,7 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: _biometric,
-          onChanged: (value) => setState(() => _biometric = value),
-          secondary: const Icon(Icons.fingerprint, color: _deepGreen, size: 30),
-          title: const Text(
-            'Biometric Login',
-            style: TextStyle(fontWeight: FontWeight.w700, color: _ink),
-          ),
-          subtitle: const Text(
-            'Use Face ID or fingerprint next time',
-            style: TextStyle(color: _muted),
-          ),
-        ),
-        const Spacer(),
+        const SizedBox(height: 24),
         _primaryButton('Log In', _loading ? null : _login),
       ],
     ),
@@ -382,7 +368,7 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
 
   Widget _signupView() {
     final titles = [
-      ('Create your account', 'Start with a secure login.'),
+      ('Create your account', 'Choose an email address and password.'),
       ('Tell us about you', 'A few details help us serve you better.'),
       ('Verify your email', 'Enter the 6-digit code sent to ${_email.text}.'),
     ];
@@ -461,31 +447,6 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
                   ? null
                   : 'Enter your full name',
             ),
-            const SizedBox(height: 18),
-            TextFormField(
-              controller: _phone,
-              focusNode: _phoneFocus,
-              keyboardType: TextInputType.phone,
-              decoration: _decoration(
-                'Mobile number',
-                Icons.phone_outlined,
-                suffix: IconButton(
-                  tooltip: 'Open numeric keypad',
-                  icon: const Icon(Icons.dialpad_outlined),
-                  onPressed: _phoneFocus.requestFocus,
-                ),
-              ),
-              validator: (value) =>
-                  value != null &&
-                      value.replaceAll(RegExp(r'\D'), '').length >= 7
-                  ? null
-                  : 'Enter a valid mobile number',
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'We use your number only for delivery updates and account security.',
-              style: TextStyle(color: _muted, height: 1.4),
-            ),
           ],
           if (_step == 2) ...[
             _otpRow(),
@@ -503,7 +464,7 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
               ),
             ),
           ],
-          const Spacer(),
+          const SizedBox(height: 24),
           _primaryButton(
             _step == 2 ? 'Verify & Create Account' : 'Continue',
             _loading
@@ -532,7 +493,8 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
             fontWeight: FontWeight.w800,
             color: _ink,
           ),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
+            labelText: 'Code digit ${index + 1} of 6',
             counterText: '',
             contentPadding: EdgeInsets.symmetric(vertical: 14),
             border: OutlineInputBorder(),
@@ -588,10 +550,21 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
                 color: Colors.red.shade50,
                 child: Text(_error!, style: const TextStyle(color: Colors.red)),
               ),
-            Expanded(child: _isLogin ? _loginView() : _signupView()),
+            Expanded(
+              child: SingleChildScrollView(
+                child: _isLogin ? _loginView() : _signupView(),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const PoliciesScreen())),
+              child: const Text('Privacy, cancellations and terms'),
+            ),
             const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   _isLogin ? 'New to NearPill? ' : 'Already have an account? ',
