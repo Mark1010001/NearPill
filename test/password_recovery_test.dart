@@ -38,7 +38,54 @@ class _RejectedLogin implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+class _CredentialError implements HttpClientAdapter {
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async => throw DioException(
+    requestOptions: options,
+    message: 'secret-password',
+    error: 'secret-password',
+    type: DioExceptionType.connectionError,
+    response: Response(
+      requestOptions: options,
+      statusCode: 500,
+      data: {'password': 'secret-password'},
+    ),
+  );
+  @override
+  void close({bool force = false}) {}
+}
+
 void main() {
+  test(
+    'API debug logs omit credentials from requests, responses and errors',
+    () async {
+      final logs = <String>[];
+      final original = debugPrint;
+      debugPrint = (String? message, {int? wrapWidth}) =>
+          logs.add(message ?? '');
+      final client = ApiClient(sessionManager: _Session());
+      client.dio.httpClientAdapter = _CredentialError();
+      addTearDown(() {
+        debugPrint = original;
+        client.dio.close(force: true);
+      });
+      await expectLater(
+        client.dio.post(
+          '/api/auth/login?secret-password',
+          data: {'password': 'secret-password'},
+          options: Options(headers: {'Authorization': 'secret-password'}),
+        ),
+        throwsA(isA<DioException>()),
+      );
+      expect(logs.join(), contains('connectionError'));
+      expect(logs.join(), isNot(contains('secret-password')));
+    },
+  );
+
   test('a rejected login is not refreshed or retried', () async {
     final session = _Session();
     var unauthorized = 0;

@@ -134,7 +134,7 @@ async function initializeDatabase() {
     await connection.end();
     console.log('🔒 [Corporate Initializer] Connection closed clean.');
   } catch (error) {
-    console.error('❌ [Corporate Initializer] Critical Error:', error.message);
+    console.error('❌ [Corporate Initializer] Critical Error:', { code: error.code });
   }
 }
 

@@ -29,7 +29,7 @@ const pool = mysql.createPool({
       console.log(`  Total: ${count[0].cnt} medicines`);
     }
   } catch (e) {
-    console.error('ERROR:', e);
+    console.error('ERROR:', { code: e.code });
   } finally {
     await pool.end();
   }

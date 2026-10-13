@@ -25,7 +25,7 @@ console.log('DB_NAME=' + process.env.DB_NAME);
     await pool.end();
   } catch (err) {
     console.error('DB test error:');
-    console.error(err);
+    console.error({ code: err.code });
     process.exit(1);
   }
 })();

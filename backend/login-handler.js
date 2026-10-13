@@ -1,5 +1,5 @@
 import { loginError } from './login-security.js';
-import { hashPassword, verifyPassword } from './passwords.js';
+import { hashPassword, passwordFormat, verifyPassword } from './passwords.js';
 
 export function createLoginHandler({ pool, authStore, security, recovery }) {
   return async (req, res) => {
@@ -15,7 +15,7 @@ export function createLoginHandler({ pool, authStore, security, recovery }) {
         }
         return res.status(401).json({ error: loginError });
       }
-      if (!user.password.startsWith('scrypt$')) {
+      if (passwordFormat(user.password) !== 'argon2id') {
         const encoded = await hashPassword(password);
         const [result] = await pool.query(
           'UPDATE users SET password = ? WHERE id = ? AND CAST(password AS BINARY) = CAST(? AS BINARY)',

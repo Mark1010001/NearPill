@@ -61,6 +61,8 @@ the database later when the capstone flow is finalized.
 
 ### Run the backend
 
+Use Node.js 24.7 or newer; password hashing uses its built-in Argon2id API.
+
 ```bash
 cd backend
 npm install
@@ -147,19 +149,48 @@ the default deliberately ignores spoofable forwarding headers. Clients otherwise
 share the proxy's IP budget. Treat a full cache as an authentication denial, not an
 unlimited bypass.
 
-New accounts and reset passwords use salted scrypt (`N=16384, r=8, p=5`, 64-byte
-key). Parameters are recorded in the hash. Existing plain-text development passwords
-are checked exactly and upgraded after a successful login with a conditional write,
-so a concurrent reset cannot be overwritten. The existing `VARCHAR(255)` password
-column fits the encoded hashes; no schema migration is needed. Dormant legacy
-records still need a planned migration or reset before live use. Session tokens now
-use cryptographically random bytes. Timed session expiry and separation of access
-and refresh privileges still need work.
+### Password storage and migration
+
+Signup and password reset use Argon2id with a random 16-byte salt, 19 MiB memory,
+two passes, one lane and a 32-byte key. The encoded hash records the parameters.
+This meets the [OWASP minimum](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+without adding a dependency. Verification uses `timingSafeEqual`, preserving the
+password exactly, including spaces and special characters.
+
+The [login handler](login-handler.js) upgrades plaintext, the previous
+`scrypt$16384$8$5$...` format, and explicitly tagged `md5$<hex>` / `sha1$<hex>`
+records after successful verification. Wrong passwords never trigger a migration.
+A conditional update prevents overwriting a concurrent password reset. Verification
+runs both KDFs during the transition so unknown accounts and legacy records also
+incur the hashing cost. Remove the old KDF work once legacy records are retired.
+
+Bare 32/40/64-character hexadecimal values cannot safely be distinguished from
+literal passwords. Those accounts, corrupted hashes and unsupported formats require
+password recovery; do not guess a format or accept a stored digest as a password.
+No MD5/SHA-1 password writer was found. The existing `VARCHAR(255)` column fits the
+new hashes; no schema change or offline rehash script is needed. Dormant legacy
+records still need sign-in migration or reset before live use.
+
+Run the read-only inventory from the repository root:
+
+```bash
+node backend/audit-passwords.js
+```
+
+It loads `backend/.env`, scans in batches and prints only format counts, never
+passwords, hashes or account identifiers. The local audit on 13 October 2026 found
+five plaintext records and no other formats; it did not modify accounts. Re-run it
+after sign-in/reset migration. Backend errors log event names and error codes;
+mobile HTTP logs omit request/response contents, URLs and exception messages;
+web console logs omit raw errors and event payloads.
+
+Session tokens use cryptographically random bytes. Timed session expiry and
+separation of access and refresh privileges still need work.
 
 From the repository root, run:
 
 ```bash
-node --test backend/test/auth-validation.test.mjs backend/test/login-security.test.mjs backend/test/email.test.mjs test/web_service_information.test.cjs
+node --test backend/test/auth-validation.test.mjs backend/test/login-security.test.mjs backend/test/email.test.mjs backend/test/password-migration.test.mjs test/web_service_information.test.cjs
 flutter test --no-pub
 ```
 

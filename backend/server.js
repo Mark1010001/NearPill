@@ -257,7 +257,7 @@ app.get('/api/health', async (req, res) => {
   } catch (error) {
     console.error(
       'Health check failed:',
-      error
+      { code: error.code }
     );
 
     res.status(500).json({
@@ -393,7 +393,7 @@ app.post('/api/auth/send-otp', validateAuthInput('send-otp'), async (req, res) =
   } catch (error) {
     console.error(
       'Send OTP failed:',
-      error
+      { code: error.code }
     );
 
     res.status(500).json({
@@ -573,7 +573,7 @@ app.post(
     } catch (error) {
       console.error(
         'Logout failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -641,7 +641,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get current user failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -726,7 +726,7 @@ app.put(
     } catch (error) {
       console.error(
         'Update profile failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -823,7 +823,7 @@ app.get('/api/medicines', async (req, res) => {
   } catch (error) {
     console.error(
       'Get medicines failed:',
-      error
+      { code: error.code }
     );
 
     res.status(500).json({
@@ -916,7 +916,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get medicine failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -1085,7 +1085,7 @@ app.get('/api/stores', async (req, res) => {
   } catch (error) {
     console.error(
       'Get stores failed:',
-      error
+      { code: error.code }
     );
 
     res.status(500).json({
@@ -1154,7 +1154,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get store failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -1269,7 +1269,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get store inventory failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -1902,7 +1902,7 @@ app.post(
 
       console.error(
         'Create order failed:',
-        error
+        { code: error.code }
       );
 
       res.status(400).json({
@@ -2118,7 +2118,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get customer orders failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -2285,7 +2285,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get single order failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -2385,7 +2385,7 @@ async function requireAdmin(
   } catch (error) {
     console.error(
       'Admin authorization failed:',
-      error
+      { code: error.code }
     );
 
     res.status(500).json({
@@ -2500,7 +2500,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get admin metrics failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -2720,7 +2720,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get admin pharmacies failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -2943,7 +2943,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get admin orders failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -3128,7 +3128,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get admin order failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -3490,7 +3490,7 @@ app.put(
 
       console.error(
         'Update order status failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -3718,7 +3718,7 @@ app.put(
 
       console.error(
         'Customer cancellation failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -3858,7 +3858,7 @@ async function expireOldOrders() {
 
     console.error(
       'Expire old orders failed:',
-      error
+      { code: error.code }
     );
   } finally {
     connection.release();
@@ -4069,7 +4069,7 @@ app.post(
 
       console.error(
         'Update inventory failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -4165,7 +4165,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get admin inventory failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -4365,7 +4365,7 @@ app.post(
     } catch (error) {
       console.error(
         'Create pharmacy failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -4663,7 +4663,7 @@ app.put(
     } catch (error) {
       console.error(
         'Update pharmacy failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -4756,7 +4756,7 @@ app.delete(
     } catch (error) {
       console.error(
         'Deactivate pharmacy failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -4815,7 +4815,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get master medicines failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -4965,7 +4965,7 @@ app.post(
     } catch (error) {
       console.error(
         'Create master medicine failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5167,7 +5167,7 @@ app.put(
     } catch (error) {
       console.error(
         'Update master medicine failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5229,7 +5229,7 @@ app.get(
     } catch (error) {
       console.error(
         'Partner dashboard failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5283,7 +5283,7 @@ app.get(
     } catch (error) {
       console.error(
         'Partner subscription failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5328,7 +5328,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get subscriptions failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5510,7 +5510,7 @@ app.post(
     } catch (error) {
       console.error(
         'Create subscription failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5680,7 +5680,7 @@ app.put(
     } catch (error) {
       console.error(
         'Update subscription failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5775,7 +5775,7 @@ app.get(
     } catch (error) {
       console.error(
         'Sales report failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5856,7 +5856,7 @@ app.get(
     } catch (error) {
       console.error(
         'Medicine report failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -5977,7 +5977,7 @@ app.get(
     } catch (error) {
       console.error(
         'Drugstore report failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -6024,7 +6024,7 @@ app.get(
     } catch (error) {
       console.error(
         'Audit log retrieval failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -6111,7 +6111,7 @@ app.get(
     } catch (error) {
       console.error(
         'Get payment failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -6322,7 +6322,7 @@ app.put(
     } catch (error) {
       console.error(
         'Update payment failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -6412,7 +6412,7 @@ app.get(
     } catch (error) {
       console.error(
         'Payment lookup failed:',
-        error
+        { code: error.code }
       );
 
       res.status(500).json({
@@ -6451,7 +6451,7 @@ app.use(
   ) => {
     console.error(
       'Unhandled server error:',
-      error
+      { code: error.code }
     );
 
     if (
@@ -6501,7 +6501,7 @@ async function startServer() {
           (error) => {
             console.error(
               'Scheduled order expiration failed:',
-              error
+              { code: error.code }
             );
           }
         );
@@ -6555,7 +6555,7 @@ async function startServer() {
             ) {
               console.error(
                 'Shutdown error:',
-                error
+                { code: error.code }
               );
 
               process.exit(
@@ -6584,7 +6584,7 @@ async function startServer() {
   } catch (error) {
     console.error(
       'Failed to start NearPill backend:',
-      error
+      { code: error.code }
     );
 
     try {

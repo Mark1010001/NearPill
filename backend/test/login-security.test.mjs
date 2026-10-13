@@ -124,7 +124,7 @@ test('progressive waits, fifth-failure lockout, one notification and exact 15-mi
   const signedIn = await f.signIn('Original-password');
   assert.equal(signedIn.statusCode, 200);
   assert.match(signedIn.body.accessToken, /^nearpill_[a-f0-9]{64}$/);
-  assert.match(f.user.password, /^scrypt\$/);
+  assert.match(f.user.password, /^\$argon2id\$/);
   assert.equal(await verifyPassword('Original-password', f.user.password), true);
 });
 
@@ -167,13 +167,17 @@ test('one credential check per account prevents concurrent bypass; reset invalid
   f.security.release(f.user.email, next);
 });
 
-test('database failure releases the pending attempt and never creates a lockout', async t => {
+test('database failure releases the pending attempt without logging credentials', async t => {
   const f = fixture(t);
-  t.mock.method(console, 'error', () => {});
-  f.pool.query = async () => { throw new Error('Database unavailable'); };
+  const logs = [];
+  t.mock.method(console, 'error', (...args) => logs.push(args));
+  f.pool.query = async () => { throw Object.assign(new Error('Database unavailable: secret-password'), { code: 'ER_TEST', sql: 'secret-password' }); };
   assert.equal((await f.signIn()).statusCode, 500);
   assert.equal((await f.signIn()).statusCode, 500);
   assert.equal(f.emails.length, 0);
+  assert.equal(logs.length, 2);
+  assert.match(JSON.stringify(logs), /ER_TEST/);
+  assert.doesNotMatch(JSON.stringify(logs), /secret-password/);
 });
 
 test('password hashes have random salts, preserve characters and support exact legacy comparison', async () => {
@@ -220,6 +224,7 @@ test('reset tokens are single-use, concurrent-safe, clear lockout and revoke onl
   const [one, two] = await Promise.all([reset(), reset()]);
   assert.deepEqual([one.statusCode, two.statusCode].sort(), [200, 400]);
   assert.equal((await reset()).statusCode, 400);
+  assert.match(f.user.password, /^\$argon2id\$/);
   assert.equal(await verifyPassword('New-password', f.user.password), true);
   assert.equal(f.authStore.sessions.has(session.accessToken), false);
   assert.equal(f.authStore.sessions.has(session.refreshToken), false);
