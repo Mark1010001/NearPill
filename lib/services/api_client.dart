@@ -29,6 +29,7 @@ class ApiClient {
         },
         onError: (DioException error, handler) async {
           if (error.response?.statusCode == 401 &&
+              error.requestOptions.path != '/api/auth/login' &&
               error.requestOptions.extra['retried'] != true) {
             final retried = await _refreshAndRetry(error.requestOptions);
             if (retried != null) {
@@ -42,7 +43,6 @@ class ApiClient {
               debugPrint('ApiClient onError: ${error.type} ${error.message}');
               debugPrint('Request path: ${error.requestOptions.path}');
               debugPrint('Response status: ${error.response?.statusCode}');
-              debugPrint('Response data: ${error.response?.data}');
             } catch (_) {}
           }
 
@@ -56,10 +56,10 @@ class ApiClient {
       _dio.interceptors.add(
         LogInterceptor(
           request: true,
-          requestHeader: true,
-          requestBody: true,
-          responseHeader: true,
-          responseBody: true,
+          requestHeader: false,
+          requestBody: false,
+          responseHeader: false,
+          responseBody: false,
           error: true,
           logPrint: (object) => debugPrint(object.toString()),
         ),

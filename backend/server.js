@@ -5,10 +5,18 @@ import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import { createAuthSessionStore } from './auth.js';
 import { validateAuthInput, handleAuthJsonError } from './auth-validation.js';
+import { fileURLToPath } from 'node:url';
+import { createLoginSecurity } from './login-security.js';
+import { createLoginHandler } from './login-handler.js';
+import { createPasswordRecovery } from './password-recovery.js';
+import { hashPassword } from './passwords.js';
+import { sendEmail } from './email.js';
 
 dotenv.config();
 
 const app = express();
+const loginSecurity = createLoginSecurity();
+const recoverySecurity = createLoginSecurity();
 
 /* =========================================================
    APP CONFIGURATION
@@ -42,6 +50,13 @@ app.use(
   })
 );
 
+app.use('/api/auth', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+// Count every login POST, including requests rejected by JSON parsing or validation.
+app.post('/api/auth/login', loginSecurity.limitIp);
+app.post(['/api/auth/forgot-password', '/api/auth/reset-password'], recoverySecurity.limitIp);
 app.use('/api/auth', express.json({ limit: '4kb' }), handleAuthJsonError);
 app.use(express.json());
 
@@ -74,6 +89,20 @@ const pool = mysql.createPool({
 ========================================================= */
 
 const authStore = createAuthSessionStore();
+const recovery = createPasswordRecovery({
+  pool, authStore, security: loginSecurity, sendEmail,
+  publicUrl: process.env.PUBLIC_APP_URL || `http://localhost:${PORT}`,
+});
+
+app.get('/reset-password', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store',
+    'Referrer-Policy': 'no-referrer',
+    'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+  });
+  res.sendFile(fileURLToPath(new URL('./public/reset-password.html', import.meta.url)));
+});
+app.use('/recovery', express.static(fileURLToPath(new URL('./public/', import.meta.url))));
 
 const pendingOtps = new Map();
 const verifiedEmails = new Map();
@@ -127,75 +156,13 @@ function getBearerToken(req) {
 ========================================================= */
 
 async function sendVerificationEmail(email, code) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MAIL_FROM;
-
-  /*
-   * If Resend is not configured, keep development working.
-   * The OTP is printed in the terminal instead.
-   */
-  if (!apiKey || !from) {
-    console.warn(
-      `[OTP DEV ONLY] ${email}: ${code}`
-    );
-
-    return {
-      devMode: true,
-    };
+  if (!process.env.RESEND_API_KEY || !process.env.MAIL_FROM) {
+    console.warn(`[OTP DEV ONLY] ${email}: ${code}`);
+    return { devMode: true };
   }
-
-  try {
-    const response = await fetch(
-      'https://api.resend.com/emails',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from,
-          to: [email],
-          subject: 'Your NearPill verification code',
-          html: `
-            <p>Your NearPill verification code is:</p>
-            <h2>${code}</h2>
-            <p>This code expires in 10 minutes.</p>
-          `,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-
-      console.error(
-        'Resend email failed:',
-        response.status,
-        text
-      );
-
-      return {
-        devMode: false,
-        sent: false,
-      };
-    }
-
-    return {
-      devMode: false,
-      sent: true,
-    };
-  } catch (error) {
-    console.error(
-      'Verification email failed:',
-      error
-    );
-
-    return {
-      devMode: false,
-      sent: false,
-    };
-  }
+  const sent = await sendEmail(email, 'Your NearPill verification code',
+    `Your NearPill verification code is ${code}. It expires in 10 minutes.`);
+  return { devMode: false, sent };
 }
 
 /* =========================================================
@@ -325,14 +292,7 @@ app.post('/api/auth/register', validateAuthInput('register'), async (req, res) =
       });
     }
 
-    /*
-     * The current database contains the existing
-     * password format, so this keeps compatibility
-     * with the current login implementation.
-     *
-     * Password hashing should be migrated later
-     * without breaking existing accounts.
-     */
+    const passwordHash = await hashPassword(cleanPassword);
     const [result] = await pool.query(
       `
       INSERT INTO users
@@ -343,7 +303,7 @@ app.post('/api/auth/register', validateAuthInput('register'), async (req, res) =
       [
         cleanName,
         cleanEmail,
-        cleanPassword,
+        passwordHash,
       ]
     );
 
@@ -506,62 +466,11 @@ app.post(
    AUTH — LOGIN
 ========================================================= */
 
-app.post('/api/auth/login', validateAuthInput('login'), async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const [rows] = await pool.query(
-      `
-      SELECT *
-      FROM users
-      WHERE email = ?
-      LIMIT 1
-      `,
-      [email]
-    );
-
-    if (
-      rows.length === 0 ||
-      rows[0].password !== password
-    ) {
-      return res.status(401).json({
-        error:
-          'Invalid email or password.',
-      });
-    }
-
-    const userId = Number(
-      rows[0].id
-    );
-
-    const {
-      accessToken,
-      refreshToken,
-    } = authStore.issueTokens(
-      userId
-    );
-
-    res.json({
-      accessToken,
-      refreshToken,
-      user: {
-        id: userId.toString(),
-        fullName: rows[0].name,
-        email: rows[0].email,
-        role: rows[0].role,
-      },
-    });
-  } catch (error) {
-    console.error(
-      'Login failed:',
-      error
-    );
-
-    res.status(500).json({
-      error: 'Login failed.',
-    });
-  }
-});
+app.post('/api/auth/login', validateAuthInput('login'), createLoginHandler({
+  pool, authStore, security: loginSecurity, recovery,
+}));
+app.post('/api/auth/forgot-password', validateAuthInput('forgot-password'), recovery.requestReset);
+app.post('/api/auth/reset-password', validateAuthInput('reset-password'), recovery.resetPassword);
 
 /* =========================================================
    AUTH — REFRESH TOKEN
@@ -6629,6 +6538,9 @@ async function startServer() {
         server.close(
           async () => {
             try {
+              loginSecurity.close();
+              recoverySecurity.close();
+              recovery.close();
               await pool.end();
 
               console.log(

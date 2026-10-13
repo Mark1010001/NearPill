@@ -69,7 +69,7 @@ npm run dev
 
 ### Authentication input validation
 
-Login, registration, send-code and verify-code requests are validated by
+Login, registration, send-code, verify-code and password-recovery requests are validated by
 `auth-validation.js` before the database or email handlers run. Auth JSON bodies
 are limited to 4 KiB. Invalid bodies return a generic JSON error with HTTP 400
 (413 for oversized bodies). Validation logs contain only the action and reason.
@@ -88,9 +88,83 @@ are limited to 4 KiB. Invalid bodies return a generic JSON error with HTTP 400
   no username field; signup sends `fullName`, `email` and `password`.
 
 Run `node --test test/auth-validation.test.mjs` from `backend` to test the
-middleware over HTTP with no database or email calls. Plain-text password
-storage, verified-email enforcement and session hardening remain separate launch
-requirements in [the readiness audit](../docs/readiness-audit.md).
+middleware over HTTP with no database or email calls. Verified-email enforcement,
+password-policy strength and further session hardening remain launch requirements
+in [the readiness audit](../docs/readiness-audit.md).
+
+### Login limits and password recovery
+
+`login-security.js` allows at most 10 login POSTs from one IP in a rolling minute,
+including malformed requests. Failed credential checks are tracked by normalized
+email across IPs. Before another credential check, failure 1 requires a 1-second
+wait, failure 2 requires 2 seconds, failure 3 requires 4 seconds and failure 4
+requires 8 seconds. Failure 5 blocks sign-in for 15 minutes. A successful sign-in
+or password reset clears the failures; counters also expire after 15 minutes idle.
+Requests during a cooldown/lockout are rejected without another password check or
+extending the lock. Only one credential check runs for an account at a time.
+
+Wrong credentials, unknown accounts, IP limits, cooldowns and lockouts all return
+the same HTTP 401 and error message, without a lockout reason or Retry-After header.
+Unknown emails receive the same account-counter behavior. Email notifications are
+sent only for actual accounts, asynchronously after the fifth failure.
+
+The Flutter **Forgot Password?** button now requests a reset link. Recovery routes:
+
+| Route | JSON body / result |
+| --- | --- |
+| `POST /api/auth/forgot-password` | `{ "email": "..." }`; same neutral confirmation for known and unknown accounts |
+| `POST /api/auth/reset-password` | `{ "token": "64 hexadecimal characters", "password": "..." }`; updates the password after validating a single-use token |
+| `GET /reset-password#token=...` | Browser form served by the backend; token stays out of server URLs and referrers |
+
+Both recovery POST routes share a separate 10-per-IP-per-minute budget. Reset links
+expire in 15 minutes and are stored as hashes in memory. Repeated manual requests
+within that interval do not resend mail. A lockout replaces any pending unused
+link with a fresh notification. Successful reset revokes that account's access and
+refresh tokens, invalidates in-flight logins and clears its lockout. No automatic
+sign-in follows a reset. Failed database writes leave the link retryable until expiry.
+
+Configure these in the local backend `.env` to send real emails:
+
+```text
+RESEND_API_KEY=your_resend_key
+MAIL_FROM=NearPill <security@your-verified-domain.com>
+PUBLIC_APP_URL=http://localhost:3001
+```
+
+Match `PUBLIC_APP_URL` to your backend's port and host. Without it, development
+defaults to `http://localhost:<PORT>`. A production URL must use HTTPS, and the
+mobile `API_BASE_URL` must also use HTTPS when deployed. Reset links always use this
+configured URL, never the request's Host or forwarded headers. Missing email
+configuration or delivery failures are logged without email addresses or tokens;
+no reset link is printed to the console. This local project has not sent a real
+security email during automated testing.
+
+State is bounded to 10,000 entries per in-memory map, purged periodically and lost
+on restart. Run one server process while using this implementation. Use shared
+storage and atomic account checks before deploying multiple instances. Behind a
+reverse proxy, configure Express `trust proxy` for the actual trusted proxy addresses;
+the default deliberately ignores spoofable forwarding headers. Clients otherwise
+share the proxy's IP budget. Treat a full cache as an authentication denial, not an
+unlimited bypass.
+
+New accounts and reset passwords use salted scrypt (`N=16384, r=8, p=5`, 64-byte
+key). Parameters are recorded in the hash. Existing plain-text development passwords
+are checked exactly and upgraded after a successful login with a conditional write,
+so a concurrent reset cannot be overwritten. The existing `VARCHAR(255)` password
+column fits the encoded hashes; no schema migration is needed. Dormant legacy
+records still need a planned migration or reset before live use. Session tokens now
+use cryptographically random bytes. Timed session expiry and separation of access
+and refresh privileges still need work.
+
+From the repository root, run:
+
+```bash
+node --test backend/test/auth-validation.test.mjs backend/test/login-security.test.mjs backend/test/email.test.mjs test/web_service_information.test.cjs
+flutter test --no-pub
+```
+
+The backend tests use a local HTTP server, fake clock, fake database and mock email
+transport. They do not modify MySQL or send real email.
 
 ### Medicine API smoke check
 

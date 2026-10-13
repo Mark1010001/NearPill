@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'home.dart';
 import 'policies_screen.dart';
+import 'forgot_password_screen.dart';
 
 const _green = Color(0xFF2E7D32);
 const _deepGreen = Color(0xFF1F6B45);
@@ -348,9 +349,10 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Password reset instructions are coming soon.'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    ForgotPasswordScreen(email: _loginEmail.text.trim()),
               ),
             ),
             child: const Text(

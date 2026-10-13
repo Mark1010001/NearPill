@@ -1,12 +1,10 @@
-import { createHash } from 'crypto';
+import { randomBytes } from 'crypto';
 
 export function createAuthSessionStore() {
   const sessions = new Map();
 
   function issueToken(userId) {
-    const token = `nearpill_${createHash('sha256')
-      .update(`${Date.now()}:${Math.random()}:${userId}`)
-      .digest('hex')}`;
+    const token = `nearpill_${randomBytes(32).toString('hex')}`;
     sessions.set(token, userId);
     return token;
   }
@@ -48,6 +46,11 @@ export function createAuthSessionStore() {
     issueToken,
     issueTokens,
     revokeToken,
+    revokeUserTokens(userId) {
+      for (const [token, owner] of sessions) {
+        if (Number(owner) === userId) sessions.delete(token);
+      }
+    },
     authenticate,
     sessions,
   };

@@ -11,7 +11,7 @@ test('auth validation rejects bad requests before handlers and logs no submitted
   const app = express();
   let handled = 0;
   app.use('/api/auth', express.json({ limit: '4kb' }), handleAuthJsonError);
-  for (const action of ['register', 'login', 'send-otp', 'verify-otp']) {
+  for (const action of ['register', 'login', 'send-otp', 'verify-otp', 'forgot-password', 'reset-password']) {
     app.post(`/api/auth/${action}`, validateAuthInput(action), (req, res) => {
       handled++;
       res.json(req.body);
@@ -48,6 +48,10 @@ test('auth validation rejects bad requests before handlers and logs no submitted
     ['login', { email: valid.email, password: 'a'.repeat(256) }],
     ...[123456, '12345', '1234567', '123456\n', 'abcdef', '１２３４５６', null]
       .map(code => ['verify-otp', { email: valid.email, code }]),
+    ['forgot-password', { email: '<script>@example.com' }],
+    ['reset-password', { token: 'a'.repeat(64), password: 'short' }],
+    ...[null, 123, '', 'a'.repeat(63), 'a'.repeat(65), 'g'.repeat(64), 'a'.repeat(63) + '\n']
+      .map(token => ['reset-password', { token, password: 'New-password' }]),
   ];
   for (const [action, body] of invalidCases) {
     const response = await request(action, body);
@@ -67,7 +71,7 @@ test('auth validation rejects bad requests before handlers and logs no submitted
     const [event, metadata] = call.arguments;
     assert.equal(event, 'auth_validation_failed');
     assert.deepEqual(Object.keys(metadata), ['action', 'reason']);
-    assert.ok(['register', 'login', 'send-otp', 'verify-otp', 'parse'].includes(metadata.action));
+    assert.ok(['register', 'login', 'send-otp', 'verify-otp', 'forgot-password', 'reset-password', 'parse'].includes(metadata.action));
     assert.ok(['invalid_input', 'entity.parse.failed', 'entity.too.large'].includes(metadata.reason));
   }
 
@@ -89,5 +93,7 @@ test('auth validation rejects bad requests before handlers and logs no submitted
   }
   assert.equal((await request('send-otp', { email: valid.email })).status, 200);
   assert.equal((await request('verify-otp', { email: valid.email, code: '012345' })).status, 200);
+  assert.equal((await request('forgot-password', { email: valid.email })).status, 200);
+  assert.equal((await request('reset-password', { token: 'a'.repeat(64), password: valid.password })).status, 200);
   assert.equal(logs.mock.calls.length, invalidCases.length + 2);
 });

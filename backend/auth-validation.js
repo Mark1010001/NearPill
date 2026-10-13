@@ -30,6 +30,11 @@ const schemas = {
     email: validEmail,
     code: value => typeof value === 'string' && value.length === 6 && /^[0-9]{6}$/.test(value),
   },
+  'forgot-password': { email: validEmail },
+  'reset-password': {
+    token: value => typeof value === 'string' && value.length === 64 && /^[a-f0-9]{64}$/.test(value),
+    password: value => schemas.register.password(value),
+  },
 };
 
 export function validateAuthInput(action) {
@@ -42,7 +47,7 @@ export function validateAuthInput(action) {
       console.warn('auth_validation_failed', { action, reason: 'invalid_input' });
       return res.status(400).json({ error: invalidInput });
     }
-    req.body.email = body.email.trim().toLowerCase();
+    if (schema.email) req.body.email = body.email.trim().toLowerCase();
     if (action === 'register') req.body.fullName = body.fullName.trim();
     next();
   };

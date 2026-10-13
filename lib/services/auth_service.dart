@@ -20,6 +20,22 @@ class AuthService {
 
   final ApiClient apiClient;
 
+  Future<void> requestPasswordReset({required String email}) async {
+    try {
+      final response = await apiClient.dio.post(
+        '/api/auth/forgot-password',
+        data: {'email': email},
+      );
+      if (response.statusCode != 200) {
+        throw AuthException(
+          'Unable to request a reset. Please try again later.',
+        );
+      }
+    } on DioException catch (error) {
+      throw _mapError(error);
+    }
+  }
+
   Future<void> register({
     required String fullName,
     required String email,
@@ -95,7 +111,9 @@ class AuthService {
       );
 
       if (response.statusCode != 200) {
-        throw AuthException('Invalid email or password.');
+        throw AuthException(
+          'Unable to sign in. Check your details or try again later.',
+        );
       }
 
       final authResponse = AuthResponseModel.fromJson(
@@ -187,7 +205,9 @@ class AuthService {
     }
 
     if (error.response?.statusCode == 401) {
-      return AuthException('Invalid email or password.');
+      return AuthException(
+        'Unable to sign in. Check your details or try again later.',
+      );
     }
 
     if (error.response?.statusCode == 400 ||
