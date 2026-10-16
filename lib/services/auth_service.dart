@@ -55,24 +55,24 @@ class AuthService {
     }
   }
 
-  Future<String?> sendOtp({required String email}) async {
+  Future<({String? devCode, bool testInbox})> sendOtp({required String email}) async {
     return await _requestOtp('/api/auth/send-otp', email);
   }
 
-  Future<String?> resendOtp({required String email}) async {
+  Future<({String? devCode, bool testInbox})> resendOtp({required String email}) async {
     return await _requestOtp('/api/auth/send-otp', email);
   }
 
-  Future<String?> _requestOtp(String path, String email) async {
+  Future<({String? devCode, bool testInbox})> _requestOtp(String path, String email) async {
     try {
       final response = await apiClient.dio.post(path, data: {'email': email});
       if (response.statusCode != 200) {
         throw AuthException('Unable to send verification code.');
       }
-      if (response.data is Map && response.data['devCode'] != null) {
-        return response.data['devCode'].toString();
-      }
-      return null;
+      return (
+        devCode: response.data is Map ? response.data['devCode']?.toString() : null,
+        testInbox: response.data is Map && response.data['testInbox'] == true,
+      );
     } on DioException catch (error) {
       if (error.response?.data is Map &&
           error.response?.data['error'] != null) {

@@ -33,7 +33,7 @@ dotenv.config();
     }
     console.log('Migration complete.');
   } catch (e) {
-    console.error('Migration error:', e);
+    console.error('Migration error:', { code: e.code });
   } finally {
     await pool.end();
   }

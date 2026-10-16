@@ -5,6 +5,19 @@ const vm = require('node:vm');
 const path = require('node:path');
 const root = path.join(__dirname, '..');
 
+test('event console logs omit payloads and handler error details', () => {
+  const logs = [];
+  const context = vm.createContext({ console: { log: (...args) => logs.push(args), error: (...args) => logs.push(args) } });
+  context.window = context;
+  vm.runInContext(fs.readFileSync(path.join(root, 'web/js/tenant-engine.js'), 'utf8'), context);
+  vm.runInContext(`
+    TenantEventEngine.on('TEST', () => { throw new Error('secret-password'); });
+    TenantEventEngine.emit('TEST', { password: 'secret-password' });
+  `, context);
+  assert.equal(logs.length, 2);
+  assert.doesNotMatch(JSON.stringify(logs), /secret-password/);
+});
+
 test('missing pharmacy and manufacturer data never becomes an approval or a rating', async () => {
   let data = [{ store_id: 1, name: 'Test pharmacy', rating: 0 }];
   const context = vm.createContext({ console, fetch: async () => ({ ok: true, json: async () => data }) });

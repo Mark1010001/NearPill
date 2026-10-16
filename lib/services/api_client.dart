@@ -37,34 +37,16 @@ class ApiClient {
               return;
             }
           }
-          // Log error in debug mode to help debugging emulator/backend issues
           if (kDebugMode) {
-            try {
-              debugPrint('ApiClient onError: ${error.type} ${error.message}');
-              debugPrint('Request path: ${error.requestOptions.path}');
-              debugPrint('Response status: ${error.response?.statusCode}');
-            } catch (_) {}
+            debugPrint(
+              'API error: ${error.type}; status: ${error.response?.statusCode}',
+            );
           }
 
           handler.next(error);
         },
       ),
     );
-
-    // Add verbose logging for requests/responses/errors in debug builds
-    if (kDebugMode) {
-      _dio.interceptors.add(
-        LogInterceptor(
-          request: true,
-          requestHeader: false,
-          requestBody: false,
-          responseHeader: false,
-          responseBody: false,
-          error: true,
-          logPrint: (object) => debugPrint(object.toString()),
-        ),
-      );
-    }
   }
 
   final SessionManager sessionManager;

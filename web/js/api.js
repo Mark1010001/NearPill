@@ -17,7 +17,7 @@ const NearPillAPI = {
         };
       }
     } catch (e) {
-      console.error("Error fetching admin metrics from DB:", e);
+      console.error("Error fetching admin metrics from DB");
     }
     return { totalGmv: 0, activePharmacies: 0, completedOrders: 0, pendingRx: 0 };
   },
@@ -44,7 +44,7 @@ const NearPillAPI = {
         }));
       }
     } catch (e) {
-      console.error("Error fetching pharmacies from DB:", e);
+      console.error("Error fetching pharmacies from DB");
     }
     return [];
   },
@@ -74,7 +74,7 @@ const NearPillAPI = {
         return orders;
       }
     } catch (e) {
-      console.error("Error fetching orders from DB:", e);
+      console.error("Error fetching orders from DB");
     }
     return [];
   },
@@ -97,7 +97,7 @@ const NearPillAPI = {
         }));
       }
     } catch (e) {
-      console.error("Error fetching medicines from DB:", e);
+      console.error("Error fetching medicines from DB");
     }
     return [];
   },
@@ -112,7 +112,7 @@ const NearPillAPI = {
       });
       return await res.json();
     } catch (e) {
-      console.error("Error approving prescription in DB:", e);
+      console.error("Error approving prescription in DB");
     }
   },
 
@@ -126,7 +126,7 @@ const NearPillAPI = {
       });
       return await res.json();
     } catch (e) {
-      console.error("Error rejecting prescription in DB:", e);
+      console.error("Error rejecting prescription in DB");
     }
   },
 
@@ -140,7 +140,7 @@ const NearPillAPI = {
       });
       return await res.json();
     } catch (e) {
-      console.error("Error updating stock in DB:", e);
+      console.error("Error updating stock in DB");
     }
   },
 
@@ -154,7 +154,7 @@ const NearPillAPI = {
       });
       return await res.json();
     } catch (e) {
-      console.error("Error marking order ready in DB:", e);
+      console.error("Error marking order ready in DB");
     }
   }
 };

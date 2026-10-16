@@ -2,7 +2,28 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { test } from 'node:test';
 import express from 'express';
-import { validateAuthInput, handleAuthJsonError } from '../auth-validation.js';
+import { validateAuthInput, requireVerifiedEmail, handleAuthJsonError } from '../auth-validation.js';
+
+test('registration requires a current verification for the same email', async t => {
+  const verifiedEmails = new Map();
+  const app = express();
+  app.use(express.json());
+  app.post('/register', validateAuthInput('register'), requireVerifiedEmail(verifiedEmails), (req, res) => res.sendStatus(201));
+  const server = app.listen(0, '127.0.0.1');
+  t.after(() => server.close());
+  await once(server, 'listening');
+  const register = email => fetch(`http://127.0.0.1:${server.address().port}/register`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...valid, email }),
+  });
+  assert.equal((await register('maria@example.com')).status, 403);
+  verifiedEmails.set('other@example.com', Date.now() + 60000);
+  assert.equal((await register('maria@example.com')).status, 403);
+  verifiedEmails.set('maria@example.com', Date.now() - 1);
+  assert.equal((await register('maria@example.com')).status, 403);
+  verifiedEmails.set('maria@example.com', Date.now() + 60000);
+  assert.equal((await register(' Maria@Example.com ')).status, 201);
+});
 
 const valid = { email: '  Maria+orders@Example.COM ', fullName: "  Maria O'Neil-Santos  ", password: ' a<>&"\'secret ' };
 

@@ -33,9 +33,9 @@ class OrderService extends ChangeNotifier {
       } else {
         _orders = [];
       }
-    } catch (e) {
+    } catch (_) {
       _error = 'Unable to load orders';
-      debugPrint('Failed to fetch orders: $e');
+      debugPrint('Failed to fetch orders');
     } finally {
       _isLoading = false;
       notifyListeners();

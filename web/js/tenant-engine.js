@@ -36,14 +36,14 @@ class NearPillTenantEventEngine {
     };
 
     this._auditLog.unshift(eventRecord);
-    console.log(`[TenantEventEngine] Emitted event ${eventName}`, payload);
+    console.log('[TenantEventEngine] Event emitted');
 
     if (this._subscribers[eventName]) {
       this._subscribers[eventName].forEach(handler => {
         try {
           handler(payload, eventRecord);
         } catch (e) {
-          console.error(`Error executing event handler for ${eventName}:`, e);
+          console.error('[TenantEventEngine] Event handler failed');
         }
       });
     }
