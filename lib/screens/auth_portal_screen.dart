@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
@@ -34,6 +35,7 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
   bool _showLoginPassword = false;
   bool _showRegisterPassword = false;
   bool _loading = false;
+  bool _testInbox = false;
   String? _error;
 
   @override
@@ -139,10 +141,14 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
       }
     });
     try {
-      final devCode = await authService.sendOtp(email: _email.text.trim());
+      final delivery = await authService.sendOtp(email: _email.text.trim());
       if (!mounted) return;
-      setState(() => _step = 2);
+      setState(() {
+        _step = 2;
+        _testInbox = delivery.testInbox;
+      });
 
+      final devCode = delivery.devCode;
       if (devCode != null && devCode.length == 6) {
         for (int i = 0; i < 6; i++) {
           _otp[i].text = devCode[i];
@@ -150,7 +156,7 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Dev Mode (Resend sandbox): Auto-filled verification code ($devCode)',
+              'Local development: verification code filled in automatically.',
             ),
             backgroundColor: _deepGreen,
             duration: const Duration(seconds: 6),
@@ -207,8 +213,10 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
       (_) => _otpFocus.first.requestFocus(),
     );
     try {
-      final devCode = await authService.resendOtp(email: _email.text.trim());
+      final delivery = await authService.resendOtp(email: _email.text.trim());
       if (mounted) {
+        setState(() => _testInbox = delivery.testInbox);
+        final devCode = delivery.devCode;
         if (devCode != null && devCode.length == 6) {
           for (int i = 0; i < 6; i++) {
             _otp[i].text = devCode[i];
@@ -216,7 +224,7 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Dev Mode (Resend sandbox): Auto-filled new code ($devCode)',
+                'Local development: new code filled in automatically.',
               ),
               backgroundColor: _deepGreen,
               duration: const Duration(seconds: 6),
@@ -237,6 +245,21 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _pasteCode() async {
+    final code = (await Clipboard.getData(Clipboard.kTextPlain))?.text?.trim();
+    if (!mounted) return;
+    if (code == null || !RegExp(r'^[0-9]{6}$').hasMatch(code)) {
+      setState(() => _error = 'Copy a 6-digit code, then tap Paste code.');
+      return;
+    }
+    for (var i = 0; i < 6; i++) {
+      _otp[i].text = code[i];
+    }
+    assert(_otp.map((controller) => controller.text).join() == code);
+    _otpFocus.last.unfocus();
+    setState(() => _error = null);
   }
 
   InputDecoration _decoration(String label, IconData icon, {Widget? suffix}) =>
@@ -372,7 +395,9 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
     final titles = [
       ('Create your account', 'Choose an email address and password.'),
       ('Tell us about you', 'A few details help us serve you better.'),
-      ('Verify your email', 'Enter the 6-digit code sent to ${_email.text}.'),
+      (_testInbox ? 'Enter test code' : 'Verify your email', _testInbox
+          ? 'Development test: enter the code sent to the configured test inbox. This does not verify ${_email.text}.'
+          : 'Enter the 6-digit code sent to ${_email.text}.'),
     ];
     return Form(
       key: _registerFormKey,
@@ -452,6 +477,13 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
           ],
           if (_step == 2) ...[
             _otpRow(),
+            Center(
+              child: TextButton.icon(
+                onPressed: _pasteCode,
+                icon: const Icon(Icons.content_paste_outlined),
+                label: const Text('Paste code'),
+              ),
+            ),
             const SizedBox(height: 20),
             Center(
               child: TextButton(
@@ -484,28 +516,41 @@ class _AuthPortalScreenState extends State<AuthPortalScreen> {
       6,
       (index) => SizedBox(
         width: 46,
-        child: TextField(
-          controller: _otp[index],
-          focusNode: _otpFocus[index],
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.number,
-          maxLength: 1,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: _ink,
+        child: Semantics(
+          label: 'Code digit ${index + 1} of 6',
+          child: TextField(
+            controller: _otp[index],
+            focusNode: _otpFocus[index],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            maxLength: 6,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: _ink,
+            ),
+            decoration: InputDecoration(
+              counterText: '',
+              contentPadding: EdgeInsets.symmetric(vertical: 14),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              if (value.length > 1) {
+                final start = value.length == 6 ? 0 : index;
+                for (var i = 0; i < value.length && start + i < 6; i++) {
+                  _otp[start + i].text = value[i];
+                }
+                assert(_otp.every((controller) => controller.text.length <= 1));
+                final next = start + value.length;
+                _otpFocus[next < 6 ? next : 5].requestFocus();
+                return;
+              }
+              if (value.isNotEmpty && index < 5) {
+                _otpFocus[index + 1].requestFocus();
+              }
+            },
           ),
-          decoration: InputDecoration(
-            labelText: 'Code digit ${index + 1} of 6',
-            counterText: '',
-            contentPadding: EdgeInsets.symmetric(vertical: 14),
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value) {
-            if (value.isNotEmpty && index < 5) {
-              _otpFocus[index + 1].requestFocus();
-            }
-          },
         ),
       ),
     ),

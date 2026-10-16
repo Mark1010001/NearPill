@@ -55,7 +55,12 @@ MAIL_FROM=NearPill <onboarding@your-verified-domain.com>
 
 Sign-up sends a six-digit code through Resend and verifies it before account
 creation. Codes expire after 10 minutes. Without the Resend settings above,
-the backend prints the OTP to the Node console for local development. The
+the backend returns the OTP to the app for local development. To test Resend
+delivery without a domain, set `DEV_OTP_INBOX` in local `.env` to the Gmail
+address on your Resend account. In non-production runs, signup codes for any
+entered address go to that test inbox. This tests the signup flow but does not
+verify ownership of the entered address. Remove `DEV_OTP_INBOX` when testing
+real email ownership; production ignores it. The
 current implementation keeps verification in memory; add `emailVerified` to
 the database later when the capstone flow is finalized.
 

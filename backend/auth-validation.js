@@ -53,6 +53,15 @@ export function validateAuthInput(action) {
   };
 }
 
+export function requireVerifiedEmail(verifiedEmails) {
+  return (req, res, next) => {
+    if ((verifiedEmails.get(req.body.email) ?? 0) <= Date.now()) {
+      return res.status(403).json({ error: 'Verify your email before creating an account.' });
+    }
+    next();
+  };
+}
+
 export function handleAuthJsonError(error, req, res, next) {
   if (error.type !== 'entity.parse.failed' && error.type !== 'entity.too.large') {
     return next(error);

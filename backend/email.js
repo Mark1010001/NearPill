@@ -1,3 +1,7 @@
+export function verificationRecipient(email, env = process.env) {
+  return env.NODE_ENV !== 'production' && env.DEV_OTP_INBOX?.trim() || email;
+}
+
 export async function sendEmail(email, subject, text) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM;

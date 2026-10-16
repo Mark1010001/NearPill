@@ -4,13 +4,13 @@ import { createHash, randomInt } from 'crypto';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import { createAuthSessionStore } from './auth.js';
-import { validateAuthInput, handleAuthJsonError } from './auth-validation.js';
+import { validateAuthInput, requireVerifiedEmail, handleAuthJsonError } from './auth-validation.js';
 import { fileURLToPath } from 'node:url';
 import { createLoginSecurity } from './login-security.js';
 import { createLoginHandler } from './login-handler.js';
 import { createPasswordRecovery } from './password-recovery.js';
 import { hashPassword } from './passwords.js';
-import { sendEmail } from './email.js';
+import { sendEmail, verificationRecipient } from './email.js';
 
 dotenv.config();
 
@@ -156,13 +156,15 @@ function getBearerToken(req) {
 ========================================================= */
 
 async function sendVerificationEmail(email, code) {
+  // shortcut: local testing redirects codes to one inbox; remove DEV_OTP_INBOX when verifying real account ownership.
+  const recipient = verificationRecipient(email);
   if (!process.env.RESEND_API_KEY || !process.env.MAIL_FROM) {
-    console.warn(`[OTP DEV ONLY] ${email}: ${code}`);
-    return { devMode: true };
+    if (process.env.NODE_ENV === 'production') return { sent: false };
+    return { devMode: true, devCode: code };
   }
-  const sent = await sendEmail(email, 'Your NearPill verification code',
+  const sent = await sendEmail(recipient, 'Your NearPill verification code',
     `Your NearPill verification code is ${code}. It expires in 10 minutes.`);
-  return { devMode: false, sent };
+  return { devMode: false, sent, testInbox: recipient !== email };
 }
 
 /* =========================================================
@@ -271,7 +273,7 @@ app.get('/api/health', async (req, res) => {
    AUTH — REGISTER
 ========================================================= */
 
-app.post('/api/auth/register', validateAuthInput('register'), async (req, res) => {
+app.post('/api/auth/register', validateAuthInput('register'), requireVerifiedEmail(verifiedEmails), async (req, res) => {
   const { fullName: cleanName, email: cleanEmail, password: cleanPassword } = req.body;
 
   try {
@@ -310,6 +312,8 @@ app.post('/api/auth/register', validateAuthInput('register'), async (req, res) =
     const userId = Number(
       result.insertId
     );
+
+    verifiedEmails.delete(cleanEmail);
 
     const {
       accessToken,
@@ -376,6 +380,7 @@ app.post('/api/auth/send-otp', validateAuthInput('send-otp'), async (req, res) =
       expiresAt:
         Date.now() + OTP_TTL_MS,
     });
+    verifiedEmails.delete(email);
 
     const emailResult =
       await sendVerificationEmail(
@@ -383,12 +388,19 @@ app.post('/api/auth/send-otp', validateAuthInput('send-otp'), async (req, res) =
         code
       );
 
+    if (!emailResult.devMode && !emailResult.sent) {
+      pendingOtps.delete(email);
+      return res.status(503).json({ error: 'Verification email could not be sent. Please try again later.' });
+    }
+
     res.json({
       message:
         'Verification code sent.',
       email,
       devMode:
         emailResult.devMode === true,
+      testInbox: emailResult.testInbox === true,
+      ...(emailResult.devMode ? { devCode: emailResult.devCode } : {}),
     });
   } catch (error) {
     console.error(

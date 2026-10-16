@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { sendEmail } from '../email.js';
+import { sendEmail, verificationRecipient } from '../email.js';
+
+test('development code delivery uses the test inbox only outside production', () => {
+  const email = 'registrant@gmail.com';
+  assert.equal(verificationRecipient(email, { DEV_OTP_INBOX: ' nearpillemail@gmail.com ' }), 'nearpillemail@gmail.com');
+  assert.equal(verificationRecipient(email, { NODE_ENV: 'production', DEV_OTP_INBOX: 'nearpillemail@gmail.com' }), email);
+  assert.equal(verificationRecipient(email, {}), email);
+});
 
 test('security email uses Resend and never logs reset links or recipient data', async t => {
   const originalKey = process.env.RESEND_API_KEY;
